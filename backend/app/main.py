@@ -56,8 +56,9 @@ async def add_private_network_access_header(request: Request, call_next):
     return response
 
 
-# Mount API Router
+# Mount API Router under both /api and root for total URL resilience
 app.include_router(api_router, prefix="/api")
+app.include_router(api_router)
 
 
 @app.get("/")
