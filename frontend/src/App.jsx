@@ -1,41 +1,87 @@
-import React from 'react'
-import { Car, Cpu, ShieldCheck, Sparkles } from 'lucide-react'
+import React, { useState } from 'react';
+import { ToastProvider } from './context/ToastContext';
+import { Sidebar } from './components/layout/Sidebar';
+import { Header } from './components/layout/Header';
+import { ChatView } from './components/chat/ChatView';
+import { CatalogView } from './components/catalog/CatalogView';
+import { ComparisonView } from './components/comparison/ComparisonView';
+import { VariantAnalyzerView } from './components/variants/VariantAnalyzerView';
+import { AdminView } from './components/admin/AdminView';
+import { DocumentUploadModal } from './components/admin/DocumentUploadModal';
 
 export default function App() {
+  const [currentTab, setCurrentTab] = useState('chat');
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [activeVehicleId, setActiveVehicleId] = useState(null);
+  const [isGlobalUploadOpen, setIsGlobalUploadOpen] = useState(false);
+  const [chatResetKey, setChatResetKey] = useState(0);
+
+  const handleChatWithVehicle = (vehicleId) => {
+    setActiveVehicleId(vehicleId);
+    setCurrentTab('chat');
+  };
+
+  const handleNewChat = () => {
+    setActiveVehicleId(null);
+    setChatResetKey((prev) => prev + 1);
+    setCurrentTab('chat');
+  };
+
   return (
-    <div className="min-h-screen bg-navy-950 text-slate-100 flex flex-col justify-center items-center px-4">
-      <div className="max-w-2xl w-full text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-navy-800/80 border border-navy-600/50 text-accent-cyan text-sm font-medium">
-          <Sparkles className="w-4 h-4 text-accent-cyan animate-pulse" />
-          <span>Automotive Intelligence Platform</span>
+    <ToastProvider>
+      <div className="flex h-screen overflow-hidden bg-navy-950 font-sans selection:bg-accent-cyan/30 selection:text-accent-cyan">
+        {/* Main Sidebar Navigation */}
+        <Sidebar
+          currentTab={currentTab}
+          setCurrentTab={setCurrentTab}
+          isMobileOpen={isMobileOpen}
+          setIsMobileOpen={setIsMobileOpen}
+        />
+
+        {/* Content Wrapper */}
+        <div className="flex-1 flex flex-col min-w-0 lg:pl-72">
+          {/* Persistent Header */}
+          <Header
+            currentTab={currentTab}
+            onOpenMobile={() => setIsMobileOpen(true)}
+            onNewChat={handleNewChat}
+            onOpenUpload={() => setIsGlobalUploadOpen(true)}
+          />
+
+          {/* Dynamic Module Viewport */}
+          <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            {currentTab === 'chat' && (
+              <ChatView
+                key={chatResetKey}
+                activeVehicleId={activeVehicleId}
+                onSelectVehicle={(vId) => setActiveVehicleId(vId)}
+              />
+            )}
+
+            {currentTab === 'catalog' && (
+              <CatalogView onChatWithVehicle={handleChatWithVehicle} />
+            )}
+
+            {currentTab === 'comparison' && (
+              <ComparisonView onChatWithVehicle={handleChatWithVehicle} />
+            )}
+
+            {currentTab === 'variants' && <VariantAnalyzerView />}
+
+            {currentTab === 'admin' && <AdminView />}
+          </main>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-accent-cyan bg-clip-text text-transparent">
-          AutoMate AI
-        </h1>
-
-        <p className="text-slate-400 text-base sm:text-lg">
-          Production-grade AI Assistant grounded in OEM vehicle brochures and structured engineering specifications.
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-          <div className="p-4 rounded-xl bg-navy-900/60 border border-navy-700/60 text-left">
-            <Cpu className="w-6 h-6 text-accent-cyan mb-2" />
-            <h3 className="font-semibold text-slate-200">Local Ollama AI</h3>
-            <p className="text-xs text-slate-400 mt-1">Grounded RAG with Qwen3 & all-minilm vector embeddings.</p>
-          </div>
-          <div className="p-4 rounded-xl bg-navy-900/60 border border-navy-700/60 text-left">
-            <Car className="w-6 h-6 text-accent-emerald mb-2" />
-            <h3 className="font-semibold text-slate-200">Spec Comparison</h3>
-            <p className="text-xs text-slate-400 mt-1">Multi-trim and vehicle side-by-side technical evaluation.</p>
-          </div>
-          <div className="p-4 rounded-xl bg-navy-900/60 border border-navy-700/60 text-left">
-            <ShieldCheck className="w-6 h-6 text-accent-amber mb-2" />
-            <h3 className="font-semibold text-slate-200">Page Provenance</h3>
-            <p className="text-xs text-slate-400 mt-1">Verified citations with exact brochure page references.</p>
-          </div>
-        </div>
+        {/* Global Upload Brochure Modal */}
+        <DocumentUploadModal
+          isOpen={isGlobalUploadOpen}
+          onClose={() => setIsGlobalUploadOpen(false)}
+          vehicles={[]}
+          onUploadSuccess={() => {
+            // If in admin view or catalog, refreshed automatically
+          }}
+        />
       </div>
-    </div>
-  )
+    </ToastProvider>
+  );
 }
