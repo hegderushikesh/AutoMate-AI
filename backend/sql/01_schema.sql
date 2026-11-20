@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
     year INT NOT NULL,
     body_type VARCHAR(50) NOT NULL, -- e.g., Sedan, SUV, Coupe, Truck
     category VARCHAR(50) NOT NULL,  -- e.g., Electric, Hybrid, Gasoline, Diesel
-    price_range VARCHAR(100),       -- e.g., "$45,000 - $65,000"
+    price_range VARCHAR(100),       -- e.g., "₹46.90 Lakh - ₹74.90 Lakh"
     hero_image_url TEXT,
     overview TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),

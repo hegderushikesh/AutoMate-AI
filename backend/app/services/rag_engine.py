@@ -4,6 +4,7 @@ import httpx
 
 from app.core.config import get_settings
 from app.services.vector_search import VectorSearchService
+from app.services.comparison_service import format_inr
 from app.core.database import DatabaseRepository
 from app.models.schemas import CitationItem
 
@@ -25,7 +26,7 @@ STRICT GROUNDING RULES:
 2. For EVERY technical claim, specification, or fact you mention, you MUST append a citation referencing the source document and page number in this format: [Doc: <Filename>, Page: <PageNumber>].
 3. If the answer cannot be determined with complete confidence from the provided context, state clearly and concisely: "This information is not available in the provided vehicle brochures or specifications."
 4. NEVER invent, extrapolate, or hallucinate vehicle specifications, trim levels, battery sizes, acceleration times, or features.
-5. Present numerical specifications with proper units (hp, Nm, kWh, kW, mm, MPGe, seconds).
+5. Present numerical specifications with proper units (hp, Nm, kWh, kW, mm, MPGe, seconds) and format currency in Indian Rupees (₹ / INR, Lakhs and Crores).
 6. Format your responses with clean markdown, bullet points, or comparison tables when appropriate."""
 
     @classmethod
@@ -124,8 +125,10 @@ Provide a factual, grounded answer based strictly on the context above. Include 
 
         variants = vehicle.get("variants", [])
         for var in variants:
+            price_val = var.get('price')
+            price_formatted = format_inr(price_val) if price_val else "N/A"
             lines.append(
-                f"  - Trim: {var.get('trim_name')} | Price: ${var.get('price'):,.2f} | Engine: {var.get('engine_type')} | "
+                f"  - Trim: {var.get('trim_name')} | Price: {price_formatted} | Engine: {var.get('engine_type')} | "
                 f"Horsepower: {var.get('horsepower_hp')} hp | Torque: {var.get('torque_nm')} Nm | "
                 f"Transmission: {var.get('transmission')} | Drivetrain: {var.get('drivetrain')} | "
                 f"Fuel/Economy: {var.get('fuel_economy')} | Seats: {var.get('seating_capacity')}"

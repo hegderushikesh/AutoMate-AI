@@ -74,6 +74,13 @@ export function VariantAnalyzerView() {
   const activeVehicle = vehicles.find((v) => v.id === selectedVehicleId);
   const availableVariants = activeVehicle?.variants || [];
 
+  const formatPriceINR = (val) => {
+    if (!val || val === 0) return '';
+    if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
+    if (val >= 100000) return `₹${(val / 100000).toFixed(2)} Lakh`;
+    return `₹${val.toLocaleString('en-IN')}`;
+  };
+
   return (
     <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-8">
       {/* Vehicle and Trim Selector Strip */}
@@ -136,7 +143,7 @@ export function VariantAnalyzerView() {
                   <div>
                     <span className="font-bold text-xs block">{varItem.trim_name}</span>
                     <span className="text-[11px] font-mono text-emerald-400">
-                      ${varItem.price?.toLocaleString()}
+                      {formatPriceINR(varItem.price)}
                     </span>
                   </div>
                 </button>

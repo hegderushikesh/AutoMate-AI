@@ -1,3 +1,6 @@
+import os
+os.environ["TESTING"] = "1"
+
 import unittest
 import asyncio
 from app.core.database import DatabaseRepository

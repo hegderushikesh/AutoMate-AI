@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional
 import numpy as np
 
 from app.core.config import get_settings
-from app.core.supabase_client import get_supabase_client, is_supabase_configured
+from app.core.supabase_client import get_supabase_client, is_supabase_configured, mark_supabase_offline
 
 settings = get_settings()
 
@@ -17,7 +17,7 @@ _SEED_VEHICLES = [
         "year": 2025,
         "body_type": "Sedan",
         "category": "Electric",
-        "price_range": "$99,400 - $211,700",
+        "price_range": "₹1.61 Cr - ₹2.53 Cr",
         "hero_image_url": "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=1200&q=80",
         "overview": "The Porsche Taycan combines iconic Porsche sports car dynamics with cutting-edge 800-volt high-performance electric architecture, blistering acceleration, and advanced recuperation.",
         "variants": [
@@ -25,7 +25,7 @@ _SEED_VEHICLES = [
                 "id": "11111111-1111-1111-1111-222222222221",
                 "vehicle_id": "11111111-1111-1111-1111-111111111111",
                 "trim_name": "Taycan Base RWD",
-                "price": 99400.0,
+                "price": 16100000.0,
                 "engine_type": "Permanent Magnet Synchronous Motor (Rear)",
                 "displacement_cc": None,
                 "horsepower_hp": 402,
@@ -51,7 +51,7 @@ _SEED_VEHICLES = [
                 "id": "11111111-1111-1111-1111-222222222222",
                 "vehicle_id": "11111111-1111-1111-1111-111111111111",
                 "trim_name": "Taycan 4S AWD",
-                "price": 118500.0,
+                "price": 18500000.0,
                 "engine_type": "Dual Permanent Magnet Synchronous Motors",
                 "displacement_cc": None,
                 "horsepower_hp": 536,
@@ -77,7 +77,7 @@ _SEED_VEHICLES = [
                 "id": "11111111-1111-1111-1111-222222222223",
                 "vehicle_id": "11111111-1111-1111-1111-111111111111",
                 "trim_name": "Taycan Turbo S",
-                "price": 209000.0,
+                "price": 25300000.0,
                 "engine_type": "Dual High-Output PSM Motors with Launch Overboost",
                 "displacement_cc": None,
                 "horsepower_hp": 938,
@@ -108,7 +108,7 @@ _SEED_VEHICLES = [
         "year": 2025,
         "body_type": "Sedan",
         "category": "Gasoline",
-        "price_range": "$45,500 - $61,500",
+        "price_range": "₹46.90 Lakh - ₹74.90 Lakh",
         "hero_image_url": "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1200&q=80",
         "overview": "The quintessential luxury sports sedan offering legendary 50:50 weight distribution, BMW Curved Display with iDrive 8.5, and responsive TwinPower Turbo propulsion.",
         "variants": [
@@ -116,7 +116,7 @@ _SEED_VEHICLES = [
                 "id": "22222222-2222-2222-2222-333333333331",
                 "vehicle_id": "22222222-2222-2222-2222-222222222222",
                 "trim_name": "330i xDrive",
-                "price": 47500.0,
+                "price": 4690000.0,
                 "engine_type": "2.0-liter BMW TwinPower Turbo Inline 4-Cylinder",
                 "displacement_cc": 1998,
                 "horsepower_hp": 255,
@@ -142,7 +142,7 @@ _SEED_VEHICLES = [
                 "id": "22222222-2222-2222-2222-333333333332",
                 "vehicle_id": "22222222-2222-2222-2222-222222222222",
                 "trim_name": "M340i xDrive",
-                "price": 61500.0,
+                "price": 7490000.0,
                 "engine_type": "3.0-liter BMW M TwinPower Turbo Inline 6-Cylinder with 48V Mild Hybrid",
                 "displacement_cc": 2998,
                 "horsepower_hp": 386,
@@ -173,7 +173,7 @@ _SEED_VEHICLES = [
         "year": 2025,
         "body_type": "SUV",
         "category": "Electric",
-        "price_range": "$42,500 - $66,100",
+        "price_range": "₹46.05 Lakh - ₹66.00 Lakh",
         "hero_image_url": "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=1200&q=80",
         "overview": "Retro-futuristic electric crossover built on the E-GMP platform with ultra-fast 350kW DC fast charging (10% to 80% in 18 minutes) and Vehicle-to-Load (V2L) two-way charging.",
         "variants": [
@@ -181,7 +181,7 @@ _SEED_VEHICLES = [
                 "id": "33333333-3333-3333-3333-444444444441",
                 "vehicle_id": "33333333-3333-3333-3333-333333333333",
                 "trim_name": "SEL Long Range AWD",
-                "price": 51200.0,
+                "price": 4605000.0,
                 "engine_type": "Dual Electric Motors (Front & Rear)",
                 "displacement_cc": None,
                 "horsepower_hp": 320,
@@ -207,7 +207,7 @@ _SEED_VEHICLES = [
                 "id": "33333333-3333-3333-3333-444444444442",
                 "vehicle_id": "33333333-3333-3333-3333-333333333333",
                 "trim_name": "Ioniq 5 N",
-                "price": 66100.0,
+                "price": 6600000.0,
                 "engine_type": "Dual High-Output High-RPM Motors with N Grin Boost",
                 "displacement_cc": None,
                 "horsepower_hp": 641,
@@ -238,7 +238,7 @@ _SEED_VEHICLES = [
         "year": 2025,
         "body_type": "Truck",
         "category": "Electric",
-        "price_range": "$57,000 - $87,000",
+        "price_range": "₹85.00 Lakh - ₹1.15 Cr",
         "hero_image_url": "https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=1200&q=80",
         "overview": "The all-electric evolution of America's best-selling pickup truck featuring standard 4x4, Mega Power Frunk, Pro Power Onboard generator capabilities, and up to 10,000 lbs towing capacity.",
         "variants": [
@@ -246,7 +246,7 @@ _SEED_VEHICLES = [
                 "id": "44444444-4444-4444-4444-555555555551",
                 "vehicle_id": "44444444-4444-4444-4444-444444444444",
                 "trim_name": "Flash Extended Range",
-                "price": 69995.0,
+                "price": 8500000.0,
                 "engine_type": "Dual In-Board Electric Motors",
                 "displacement_cc": None,
                 "horsepower_hp": 580,
@@ -272,7 +272,7 @@ _SEED_VEHICLES = [
                 "id": "44444444-4444-4444-4444-555555555552",
                 "vehicle_id": "44444444-4444-4444-4444-444444444444",
                 "trim_name": "Platinum Extended Range",
-                "price": 86995.0,
+                "price": 11500000.0,
                 "engine_type": "Dual In-Board Electric Motors High-Output",
                 "displacement_cc": None,
                 "horsepower_hp": 580,
@@ -306,6 +306,11 @@ _LOCAL_SESSIONS: List[Dict[str, Any]] = []
 _LOCAL_MESSAGES: List[Dict[str, Any]] = []
 
 
+def _handle_supabase_error(op_name: str, e: Exception):
+    print(f"[DatabaseRepository] Supabase {op_name} error: {e}, falling back to local store.")
+    mark_supabase_offline()
+
+
 class DatabaseRepository:
     """
     Unified database repository. Uses Supabase PostgreSQL + pgvector when configured,
@@ -321,7 +326,7 @@ class DatabaseRepository:
                 if res.data:
                     return res.data
             except Exception as e:
-                print(f"[DatabaseRepository] Supabase fetch error, using local store: {e}")
+                _handle_supabase_error("fetch", e)
         return _LOCAL_VEHICLES
 
     @classmethod
@@ -333,7 +338,7 @@ class DatabaseRepository:
                 if res.data:
                     return res.data[0]
             except Exception as e:
-                print(f"[DatabaseRepository] Supabase get vehicle error: {e}")
+                _handle_supabase_error("get_vehicle", e)
 
         for v in _LOCAL_VEHICLES:
             if str(v.get("id")) == str(vehicle_id):
@@ -352,7 +357,7 @@ class DatabaseRepository:
                 clean_v = {k: v for k, v in record.items() if k != "variants"}
                 client.table("vehicles").insert(clean_v).execute()
             except Exception as e:
-                print(f"[DatabaseRepository] Supabase vehicle insert error: {e}")
+                _handle_supabase_error("vehicle_insert", e)
 
         _LOCAL_VEHICLES.append(record)
         return record
@@ -367,7 +372,7 @@ class DatabaseRepository:
             try:
                 client.table("variants").insert(record).execute()
             except Exception as e:
-                print(f"[DatabaseRepository] Supabase variant insert error: {e}")
+                _handle_supabase_error("variant_insert", e)
 
         # Update local
         for v in _LOCAL_VEHICLES:
@@ -387,7 +392,7 @@ class DatabaseRepository:
             try:
                 client.table("documents").insert(record).execute()
             except Exception as e:
-                print(f"[DatabaseRepository] Supabase document insert error: {e}")
+                _handle_supabase_error("document_insert", e)
 
         _LOCAL_DOCUMENTS.append(record)
         return record
@@ -402,7 +407,7 @@ class DatabaseRepository:
                     update_fields["error_message"] = error_message
                 client.table("documents").update(update_fields).eq("id", doc_id).execute()
             except Exception as e:
-                print(f"[DatabaseRepository] Supabase document update error: {e}")
+                _handle_supabase_error("document_update", e)
 
         for d in _LOCAL_DOCUMENTS:
             if str(d.get("id")) == str(doc_id):
@@ -421,7 +426,7 @@ class DatabaseRepository:
                 if res.data:
                     return res.data
             except Exception as e:
-                print(f"[DatabaseRepository] Supabase list documents error: {e}")
+                _handle_supabase_error("list_documents", e)
         return list(reversed(_LOCAL_DOCUMENTS))
 
     @classmethod
@@ -431,7 +436,7 @@ class DatabaseRepository:
             try:
                 client.table("document_chunks").insert(chunks).execute()
             except Exception as e:
-                print(f"[DatabaseRepository] Supabase chunk insert error: {e}")
+                _handle_supabase_error("chunk_insert", e)
 
         _LOCAL_CHUNKS.extend(chunks)
         return len(chunks)
@@ -461,7 +466,7 @@ class DatabaseRepository:
                 if res.data:
                     return res.data
             except Exception as e:
-                print(f"[DatabaseRepository] Supabase RPC vector search error: {e}")
+                _handle_supabase_error("vector_search", e)
 
         # Local cosine similarity fallback using numpy
         if not _LOCAL_CHUNKS or not query_embedding:
@@ -517,7 +522,7 @@ class DatabaseRepository:
             try:
                 client.table("chat_sessions").insert({"id": session_id, "title": title, "vehicle_id": vehicle_id}).execute()
             except Exception as e:
-                print(f"[DatabaseRepository] Supabase session error: {e}")
+                _handle_supabase_error("session_create", e)
 
         _LOCAL_SESSIONS.append(record)
         return record
@@ -531,7 +536,7 @@ class DatabaseRepository:
                 if res.data:
                     return res.data
             except Exception as e:
-                print(f"[DatabaseRepository] Supabase get sessions error: {e}")
+                _handle_supabase_error("get_sessions", e)
         return list(reversed(_LOCAL_SESSIONS))
 
     @classmethod
@@ -552,7 +557,7 @@ class DatabaseRepository:
             try:
                 client.table("chat_messages").insert(record).execute()
             except Exception as e:
-                print(f"[DatabaseRepository] Supabase message insert error: {e}")
+                _handle_supabase_error("message_insert", e)
 
         _LOCAL_MESSAGES.append(record)
         for s in _LOCAL_SESSIONS:
@@ -571,6 +576,6 @@ class DatabaseRepository:
                 if res.data:
                     return res.data
             except Exception as e:
-                print(f"[DatabaseRepository] Supabase get messages error: {e}")
+                _handle_supabase_error("get_messages", e)
 
         return [m for m in _LOCAL_MESSAGES if str(m.get("session_id")) == str(session_id)]

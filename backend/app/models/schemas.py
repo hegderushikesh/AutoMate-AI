@@ -36,7 +36,7 @@ class VehicleBase(BaseModel):
     year: int = Field(..., ge=1900, le=2100, example=2025)
     body_type: str = Field(..., example="Sedan")
     category: str = Field(..., example="Electric")
-    price_range: Optional[str] = Field(None, example="$99,400 - $211,700")
+    price_range: Optional[str] = Field(None, example="₹1.61 Cr - ₹2.53 Cr")
     hero_image_url: Optional[str] = Field(None, example="https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e")
     overview: Optional[str] = Field(None, example="High performance electric luxury sports sedan.")
 

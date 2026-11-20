@@ -1,3 +1,6 @@
+import os
+os.environ["TESTING"] = "1"
+
 import unittest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -60,7 +63,7 @@ class VehicleEndpointTests(unittest.TestCase):
             "year": 2025,
             "body_type": "Sedan",
             "category": "Electric",
-            "price_range": "$106,500 - $167,000",
+            "price_range": "₹1.72 Cr - ₹2.05 Cr",
             "overview": "Grand touring electric sports car with dual-motor quattro.",
         }
         create_resp = self.client.post("/api/vehicles", json=new_car)
@@ -72,7 +75,7 @@ class VehicleEndpointTests(unittest.TestCase):
         # Add variant
         variant_payload = {
             "trim_name": "RS e-tron GT",
-            "price": 147500.0,
+            "price": 19500000.0,
             "engine_type": "Dual Synchronous Electric Motors",
             "horsepower_hp": 637,
             "torque_nm": 830,

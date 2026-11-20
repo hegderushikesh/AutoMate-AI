@@ -19,7 +19,7 @@ BEGIN
         2025,
         'Sedan',
         'Electric',
-        '$99,400 - $211,700',
+        '₹1.61 Cr - ₹2.53 Cr',
         'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=1200&q=80',
         'The Porsche Taycan combines iconic Porsche sports car dynamics with cutting-edge 800-volt high-performance electric architecture, blistering acceleration, and advanced recuperation.'
     ) ON CONFLICT (make, model, year) DO NOTHING;
@@ -30,7 +30,7 @@ BEGIN
     (
         v_taycan_id,
         'Taycan Base RWD',
-        99400.00,
+        16100000.00,
         'Permanent Magnet Synchronous Motor (Rear)',
         NULL,
         402,
@@ -47,7 +47,7 @@ BEGIN
     (
         v_taycan_id,
         'Taycan 4S AWD',
-        118500.00,
+        18500000.00,
         'Dual Permanent Magnet Synchronous Motors',
         NULL,
         536,
@@ -64,7 +64,7 @@ BEGIN
     (
         v_taycan_id,
         'Taycan Turbo S',
-        209000.00,
+        25300000.00,
         'Dual High-Output PSM Motors with Launch Overboost',
         NULL,
         938,
@@ -88,7 +88,7 @@ BEGIN
         2025,
         'Sedan',
         'Gasoline',
-        '$45,500 - $61,500',
+        '₹46.90 Lakh - ₹74.90 Lakh',
         'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1200&q=80',
         'The quintessential luxury sports sedan offering legendary 50:50 weight distribution, BMW Curved Display with iDrive 8.5, and responsive TwinPower Turbo propulsion.'
     ) ON CONFLICT (make, model, year) DO NOTHING;
@@ -98,7 +98,7 @@ BEGIN
     (
         v_m3_id,
         '330i xDrive',
-        47500.00,
+        4690000.00,
         '2.0-liter BMW TwinPower Turbo Inline 4-Cylinder',
         1998,
         255,
@@ -115,7 +115,7 @@ BEGIN
     (
         v_m3_id,
         'M340i xDrive',
-        61500.00,
+        7490000.00,
         '3.0-liter BMW M TwinPower Turbo Inline 6-Cylinder with 48V Mild Hybrid',
         2998,
         386,
@@ -139,7 +139,7 @@ BEGIN
         2025,
         'SUV',
         'Electric',
-        '$42,500 - $66,100',
+        '₹46.05 Lakh - ₹66.00 Lakh',
         'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=1200&q=80',
         'Retro-futuristic electric crossover built on the E-GMP platform with ultra-fast 350kW DC fast charging (10% to 80% in 18 minutes) and Vehicle-to-Load (V2L) two-way charging.'
     ) ON CONFLICT (make, model, year) DO NOTHING;
@@ -149,7 +149,7 @@ BEGIN
     (
         v_ioniq5_id,
         'SEL Long Range AWD',
-        51200.00,
+        4605000.00,
         'Dual Electric Motors (Front & Rear)',
         NULL,
         320,
@@ -166,7 +166,7 @@ BEGIN
     (
         v_ioniq5_id,
         'Ioniq 5 N',
-        66100.00,
+        6600000.00,
         'Dual High-Output High-RPM Motors with N Grin Boost',
         NULL,
         641,
@@ -190,7 +190,7 @@ BEGIN
         2025,
         'Truck',
         'Electric',
-        '$57,000 - $87,000',
+        '₹85.00 Lakh - ₹1.15 Cr',
         'https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=1200&q=80',
         'The all-electric evolution of America’s best-selling pickup truck featuring standard 4x4, Mega Power Frunk, Pro Power Onboard generator capabilities, and up to 10,000 lbs towing capacity.'
     ) ON CONFLICT (make, model, year) DO NOTHING;
@@ -200,7 +200,7 @@ BEGIN
     (
         v_lightning_id,
         'Flash Extended Range',
-        69995.00,
+        8500000.00,
         'Dual In-Board Electric Motors',
         NULL,
         580,
@@ -217,7 +217,7 @@ BEGIN
     (
         v_lightning_id,
         'Platinum Extended Range',
-        86995.00,
+        11500000.00,
         'Dual In-Board Electric Motors High-Output',
         NULL,
         580,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap, Gauge, DollarSign, ArrowRight, MessageSquare, ShieldCheck } from 'lucide-react';
+import { Zap, Gauge, IndianRupee, ArrowRight, MessageSquare, ShieldCheck } from 'lucide-react';
 import { Badge } from '../ui/Modal';
 
 export function VehicleCard({ vehicle, onSelect, onChat }) {
@@ -7,6 +7,13 @@ export function VehicleCard({ vehicle, onSelect, onChat }) {
   const maxHp = Math.max(...variants.map((v) => v.horsepower_hp || 0), 0);
   const minPrice = Math.min(...variants.map((v) => v.price || 0), 0);
   const isElectric = vehicle.category?.toLowerCase() === 'electric';
+
+  const formatPriceINR = (val) => {
+    if (!val || val === 0) return 'Inquire';
+    if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
+    if (val >= 100000) return `₹${(val / 100000).toFixed(2)} Lakh`;
+    return `₹${val.toLocaleString('en-IN')}`;
+  };
 
   return (
     <div className="group rounded-2xl bg-navy-900/80 hover:bg-navy-900 border border-navy-800 hover:border-accent-cyan/40 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-[0_8px_30px_rgba(56,189,248,0.15)] flex flex-col">
@@ -61,11 +68,11 @@ export function VehicleCard({ vehicle, onSelect, onChat }) {
           </div>
 
           <div className="p-2.5 rounded-xl bg-navy-950/60 border border-navy-800 flex items-center gap-2">
-            <DollarSign className="w-4 h-4 text-emerald-400 shrink-0" />
+            <IndianRupee className="w-4 h-4 text-emerald-400 shrink-0" />
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 block">Pricing</span>
               <span className="text-xs font-mono font-bold text-slate-200">
-                ${minPrice ? `${minPrice.toLocaleString()}` : 'Inquire'}
+                {formatPriceINR(minPrice)}
               </span>
             </div>
           </div>

@@ -3,6 +3,20 @@ from app.core.database import DatabaseRepository
 from app.models.schemas import ComparisonResult, SpecMetric
 
 
+def format_inr(amount: float) -> str:
+    """Formats numerical amounts into Indian Rupee (INR / ₹) with Lakh / Crore units."""
+    if amount is None or amount == 0:
+        return "₹0"
+    if amount >= 10_000_000:
+        cr = amount / 10_000_000
+        return f"₹{cr:.2f} Cr"
+    elif amount >= 100_000:
+        lakh = amount / 100_000
+        return f"₹{lakh:.2f} Lakh"
+    else:
+        return f"₹{amount:,.0f}"
+
+
 class ComparisonService:
     """
     Intelligent comparison engine for multi-vehicle and multi-trim evaluation.
@@ -37,7 +51,7 @@ class ComparisonService:
                 "category": v.get("category"),
                 "body_type": v.get("body_type"),
                 "hero_image_url": v.get("hero_image_url"),
-                "price_range": v.get("price_range") or f"${min_price:,.0f} - ${max_price:,.0f}",
+                "price_range": v.get("price_range") or f"{format_inr(min_price)} - {format_inr(max_price)}",
                 "min_price": min_price,
                 "max_price": max_price,
                 "max_hp": max_hp,
@@ -60,8 +74,9 @@ class ComparisonService:
             ),
             SpecMetric(
                 name="price_range",
-                label="MSRP Range",
+                label="Price Range (INR / ₹)",
                 values={e["id"]: e["price_range"] for e in entities},
+                unit="₹",
             ),
             SpecMetric(
                 name="max_hp",
@@ -100,7 +115,7 @@ class ComparisonService:
             highest_power = max(entities, key=lambda x: x["max_hp"])
             winners.append(f"🏆 {highest_power['name']} leads in performance with up to {highest_power['max_hp']} hp.")
             most_affordable = min(entities, key=lambda x: x["min_price"])
-            winners.append(f"💰 {most_affordable['name']} offers the lowest entry price starting at ${most_affordable['min_price']:,.2f}.")
+            winners.append(f"💰 {most_affordable['name']} offers the lowest entry price starting at {format_inr(most_affordable['min_price'])}.")
 
         return ComparisonResult(
             entities=entities,
@@ -148,9 +163,9 @@ class ComparisonService:
         specs = [
             SpecMetric(
                 name="price",
-                label="Base MSRP",
-                values={e["id"]: f"${e['price']:,.2f}" for e in entities},
-                unit="$",
+                label="Ex-Showroom Price (INR)",
+                values={e["id"]: format_inr(e["price"]) for e in entities},
+                unit="₹",
                 higher_is_better=False,
             ),
             SpecMetric(
@@ -192,7 +207,7 @@ class ComparisonService:
         radar_data = [
             {"subject": "Power (hp)", **{e["name"]: min(100, int((e["horsepower_hp"] / 950) * 100)) for e in entities}},
             {"subject": "Torque (Nm)", **{e["name"]: min(100, int((e["torque_nm"] / 1150) * 100)) for e in entities}},
-            {"subject": "Affordability", **{e["name"]: max(10, min(100, int(100 - (e["price"] / 220000) * 100))) for e in entities}},
+            {"subject": "Affordability", **{e["name"]: max(10, min(100, int(100 - (e["price"] / 30000000) * 100))) for e in entities}},
             {"subject": "Features Count", **{e["name"]: min(100, len(e["key_features"]) * 20) for e in entities}},
         ]
 
@@ -201,7 +216,7 @@ class ComparisonService:
             top_power = max(entities, key=lambda x: x["horsepower_hp"])
             winners.append(f"⚡ Top Performer: {top_power['name']} with {top_power['horsepower_hp']} hp and {top_power['torque_nm']} Nm.")
             best_val = min(entities, key=lambda x: x["price"])
-            winners.append(f"💵 Price Leader: {best_val['name']} at ${best_val['price']:,.2f}.")
+            winners.append(f"💵 Price Leader: {best_val['name']} at {format_inr(best_val['price'])}.")
 
         return ComparisonResult(
             entities=entities,

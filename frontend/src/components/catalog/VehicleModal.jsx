@@ -1,11 +1,18 @@
 import React from 'react';
 import { Modal, Badge } from '../ui/Modal';
-import { Gauge, Zap, DollarSign, Shield, Check, Ruler, MessageSquare } from 'lucide-react';
+import { Gauge, Zap, IndianRupee, Shield, Check, Ruler, MessageSquare } from 'lucide-react';
 
 export function VehicleModal({ vehicle, isOpen, onClose, onChat }) {
   if (!vehicle) return null;
 
   const variants = vehicle.variants || [];
+
+  const formatPriceINR = (val) => {
+    if (!val || val === 0) return 'N/A';
+    if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
+    if (val >= 100000) return `₹${(val / 100000).toFixed(2)} Lakh`;
+    return `₹${val.toLocaleString('en-IN')}`;
+  };
 
   return (
     <Modal
@@ -79,9 +86,16 @@ export function VehicleModal({ vehicle, isOpen, onClose, onChat }) {
                     <span className="font-bold text-white text-base">{v.trim_name}</span>
                     <Badge variant="default">{v.drivetrain}</Badge>
                   </div>
-                  <span className="font-mono text-base font-extrabold text-emerald-400">
-                    ${v.price ? v.price.toLocaleString() : 'N/A'}
-                  </span>
+                  <div className="text-right">
+                    <span className="font-mono text-base font-extrabold text-emerald-400 block">
+                      {formatPriceINR(v.price)}
+                    </span>
+                    {v.price && (
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        (₹{v.price.toLocaleString('en-IN')})
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Specs row */}

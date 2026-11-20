@@ -60,16 +60,16 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
 
   const suggestedPrompts = [
     {
+      text: 'What are the variant prices in Indian Rupees (₹ INR) and specifications for the BMW 3 Series?',
+      vehicle: '22222222-2222-2222-2222-222222222222',
+    },
+    {
       text: 'What is the charging voltage architecture and maximum DC fast charging rate of the Taycan?',
       vehicle: '11111111-1111-1111-1111-111111111111',
     },
     {
-      text: 'Compare the horsepower, torque, and 0-60 time across all Taycan trims.',
+      text: 'Compare the horsepower, torque, and price across all Taycan trims in Lakhs/Crores.',
       vehicle: '11111111-1111-1111-1111-111111111111',
-    },
-    {
-      text: 'What are the engine specs, fuel economy, and transmission of the BMW 330i xDrive vs M340i?',
-      vehicle: '22222222-2222-2222-2222-222222222222',
     },
     {
       text: 'What is the maximum towing capacity and battery capacity of the Ford F-150 Lightning?',
