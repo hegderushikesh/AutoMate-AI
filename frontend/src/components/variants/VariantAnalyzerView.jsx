@@ -82,18 +82,18 @@ export function VariantAnalyzerView() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-8">
+    <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-6 bg-slate-50">
       {/* Vehicle and Trim Selector Strip */}
-      <div className="p-5 rounded-2xl bg-navy-900/80 border border-navy-800 space-y-4 shadow-lg">
+      <div className="p-5 rounded-lg bg-white border border-slate-200 space-y-4 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">
               Select Vehicle to Analyze Trims:
             </label>
             <select
               value={selectedVehicleId}
               onChange={(e) => handleVehicleChange(e.target.value)}
-              className="bg-navy-950 border border-navy-700/80 text-white font-bold text-sm rounded-xl px-4 py-2 focus:outline-none focus:border-accent-cyan"
+              className="bg-white border border-slate-300 text-slate-800 font-medium text-sm rounded-md px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 shadow-xs"
             >
               {vehicles.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -103,11 +103,11 @@ export function VariantAnalyzerView() {
             </select>
           </div>
 
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block">
+          <div className="sm:text-right">
+            <span className="text-[10px] uppercase font-semibold text-slate-500 block">
               Trims in Configuration
             </span>
-            <span className="text-sm font-mono font-bold text-accent-cyan">
+            <span className="text-sm font-mono font-semibold text-blue-600">
               {selectedVariantIds.length} of {availableVariants.length} Active
             </span>
           </div>
@@ -115,7 +115,7 @@ export function VariantAnalyzerView() {
 
         {/* Trim Chips */}
         <div>
-          <span className="text-[10px] uppercase font-bold text-slate-400 block mb-2">
+          <span className="text-[10px] uppercase font-semibold text-slate-500 block mb-2">
             Toggle Trim Packages:
           </span>
           <div className="flex flex-wrap gap-2.5">
@@ -125,24 +125,24 @@ export function VariantAnalyzerView() {
                 <button
                   key={varItem.id}
                   onClick={() => toggleVariant(varItem.id)}
-                  className={`p-3 rounded-xl text-left border transition-all duration-200 flex items-center gap-3 ${
+                  className={`p-3 rounded-lg text-left border transition-all duration-150 flex items-center gap-3 ${
                     isSelected
-                      ? 'bg-accent-cyan/15 border-accent-cyan/60 text-white shadow-sm'
-                      : 'bg-navy-950/80 hover:bg-navy-850 border-navy-800 text-slate-400'
+                      ? 'bg-blue-50 border-blue-400 text-blue-900 shadow-xs font-semibold'
+                      : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
                   }`}
                 >
                   <div
-                    className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 border ${
+                    className={`w-4 h-4 rounded flex items-center justify-center shrink-0 border ${
                       isSelected
-                        ? 'bg-accent-cyan border-accent-cyan text-navy-950'
-                        : 'border-navy-700 bg-navy-900'
+                        ? 'bg-blue-600 border-blue-600 text-white'
+                        : 'border-slate-300 bg-slate-50'
                     }`}
                   >
                     {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                   </div>
                   <div>
-                    <span className="font-bold text-xs block">{varItem.trim_name}</span>
-                    <span className="text-[11px] font-mono text-emerald-400">
+                    <span className="font-semibold text-xs block text-slate-900">{varItem.trim_name}</span>
+                    <span className="text-[11px] font-mono font-medium text-emerald-700">
                       {formatPriceINR(varItem.price)}
                     </span>
                   </div>
@@ -155,18 +155,18 @@ export function VariantAnalyzerView() {
 
       {loading ? (
         <div className="py-20 flex flex-col items-center justify-center space-y-3">
-          <Loader2 className="w-8 h-8 text-accent-cyan animate-spin" />
-          <p className="text-sm font-semibold text-slate-400">Analyzing trim package differentials...</p>
+          <Loader2 className="w-7 h-7 text-blue-600 animate-spin" />
+          <p className="text-xs font-medium text-slate-500">Analyzing trim package differentials...</p>
         </div>
       ) : comparisonResult ? (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Winner Takeaways */}
           {comparisonResult.winner_highlights && (
-            <div className="p-4 rounded-xl bg-navy-900/60 border border-navy-800 flex flex-wrap gap-2">
+            <div className="p-4 rounded-lg bg-blue-50/60 border border-blue-200 flex flex-wrap gap-2">
               {comparisonResult.winner_highlights.map((h, i) => (
                 <span
                   key={i}
-                  className="text-xs font-medium text-slate-200 bg-navy-950 px-3 py-1.5 rounded-lg border border-navy-800"
+                  className="text-xs font-medium text-slate-700 bg-white px-3 py-1.5 rounded-md border border-blue-100 shadow-2xs"
                 >
                   {h}
                 </span>
@@ -182,7 +182,7 @@ export function VariantAnalyzerView() {
 
           {/* Detailed Spec Comparison Table */}
           <div className="space-y-3">
-            <h4 className="text-sm font-bold text-white tracking-wide">
+            <h4 className="text-sm font-semibold text-slate-900 tracking-tight">
               Trim-by-Trim Technical Delta Table
             </h4>
             <SpecTable

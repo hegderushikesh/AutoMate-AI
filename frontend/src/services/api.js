@@ -41,6 +41,7 @@ export const api = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   getDocumentChunks: (docId) => apiClient.get(`/documents/${docId}/chunks`),
+  deleteDocument: (docId) => apiClient.delete(`/documents/${docId}`),
 
   // RAG Chat
   sendMessage: (payload) => apiClient.post('/chat/message', payload),

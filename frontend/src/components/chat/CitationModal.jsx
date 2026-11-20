@@ -9,21 +9,21 @@ export function CitationModal({ citation, isOpen, onClose }) {
     <Modal isOpen={isOpen} onClose={onClose} title="Verified Source Citation">
       <div className="space-y-4">
         {/* Document metadata header */}
-        <div className="p-4 rounded-xl bg-navy-950/70 border border-navy-800 flex items-start gap-3">
-          <div className="p-2.5 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan">
-            <FileText className="w-5 h-5" />
+        <div className="p-3.5 rounded-md bg-slate-50 border border-slate-200 flex items-start gap-3">
+          <div className="p-2 rounded bg-blue-50 border border-blue-200 text-blue-600">
+            <FileText className="w-4 h-4" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-semibold text-white truncate">
+            <h4 className="text-xs font-bold text-slate-900 truncate">
               {citation.document_name}
             </h4>
-            <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-              <span className="font-mono text-accent-cyan font-semibold">
+            <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
+              <span className="font-mono text-blue-700 font-semibold">
                 Page {citation.page_number}
               </span>
               <span>•</span>
-              <span className="flex items-center gap-1 text-emerald-400">
-                <CheckCircle2 className="w-3.5 h-3.5" /> PyMuPDF Verified Passages
+              <span className="flex items-center gap-1 text-emerald-700">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> PyMuPDF Verified Excerpt
               </span>
             </div>
           </div>
@@ -31,17 +31,16 @@ export function CitationModal({ citation, isOpen, onClose }) {
 
         {/* Excerpt Body */}
         <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+          <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
             Brochure Text Excerpt
           </label>
-          <div className="p-4 rounded-xl bg-navy-950/90 border border-navy-800/80 text-sm font-mono leading-relaxed text-slate-200 whitespace-pre-wrap max-h-60 overflow-y-auto">
+          <div className="p-3.5 rounded-md bg-slate-50 border border-slate-200 text-xs font-mono leading-relaxed text-slate-800 whitespace-pre-wrap max-h-60 overflow-y-auto">
             {citation.excerpt}
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-sky-950/30 border border-sky-800/30 text-xs text-sky-300">
-          💡 AutoMate AI answers are restricted to verified brochure excerpts to eliminate
-          hallucinations and ensure 100% engineering accuracy.
+        <div className="p-3 rounded-md bg-blue-50 border border-blue-200 text-xs text-blue-800">
+          Answers are strictly restricted to verified brochure excerpts to eliminate hallucinations and maintain OEM technical accuracy.
         </div>
       </div>
     </Modal>

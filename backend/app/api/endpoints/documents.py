@@ -143,3 +143,10 @@ async def get_document_chunks(doc_id: str):
         "chunk_count": len(matching),
         "chunks": matching,
     }
+
+
+@router.delete("/{doc_id}", status_code=status.HTTP_200_OK)
+async def delete_document(doc_id: str):
+    """Delete an uploaded brochure and all its associated vector chunks."""
+    success = await DatabaseRepository.delete_document(doc_id)
+    return {"success": success, "deleted_id": doc_id}

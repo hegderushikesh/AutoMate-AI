@@ -36,26 +36,26 @@ export function ToastProvider({ children }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-start gap-3 p-3.5 rounded-xl shadow-2xl border backdrop-blur-md transition-all duration-300 animate-slideIn ${
+            className={`pointer-events-auto flex items-start gap-3 p-3.5 rounded-lg shadow-lg border border-slate-200 bg-white transition-all duration-200 ${
               t.type === 'success'
-                ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-100'
+                ? 'border-l-4 border-l-emerald-600 text-slate-800'
                 : t.type === 'error'
-                ? 'bg-rose-950/80 border-rose-500/40 text-rose-100'
+                ? 'border-l-4 border-l-red-600 text-slate-800'
                 : t.type === 'warning'
-                ? 'bg-amber-950/80 border-amber-500/40 text-amber-100'
-                : 'bg-navy-900/90 border-navy-600/60 text-slate-100'
+                ? 'border-l-4 border-l-amber-500 text-slate-800'
+                : 'border-l-4 border-l-blue-600 text-slate-800'
             }`}
           >
             <div className="shrink-0 mt-0.5">
-              {t.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
-              {t.type === 'error' && <AlertCircle className="w-5 h-5 text-rose-400" />}
-              {t.type === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-400" />}
-              {t.type === 'info' && <Info className="w-5 h-5 text-accent-cyan" />}
+              {t.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+              {t.type === 'error' && <AlertCircle className="w-5 h-5 text-red-600" />}
+              {t.type === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-500" />}
+              {t.type === 'info' && <Info className="w-5 h-5 text-blue-600" />}
             </div>
-            <p className="text-sm font-medium leading-snug flex-1">{t.message}</p>
+            <p className="text-sm font-medium leading-snug flex-1 text-slate-800">{t.message}</p>
             <button
               onClick={() => removeToast(t.id)}
-              className="text-slate-400 hover:text-white transition-colors"
+              className="text-slate-400 hover:text-slate-600 transition-colors p-0.5"
             >
               <X className="w-4 h-4" />
             </button>

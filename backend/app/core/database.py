@@ -430,6 +430,21 @@ class DatabaseRepository:
         return list(reversed(_LOCAL_DOCUMENTS))
 
     @classmethod
+    async def delete_document(cls, doc_id: str) -> bool:
+        client = get_supabase_client()
+        if client:
+            try:
+                client.table("document_chunks").delete().eq("document_id", doc_id).execute()
+                client.table("documents").delete().eq("id", doc_id).execute()
+            except Exception as e:
+                _handle_supabase_error("document_delete", e)
+
+        global _LOCAL_DOCUMENTS, _LOCAL_CHUNKS
+        _LOCAL_DOCUMENTS = [d for d in _LOCAL_DOCUMENTS if str(d.get("id")) != str(doc_id)]
+        _LOCAL_CHUNKS = [c for c in _LOCAL_CHUNKS if str(c.get("document_id")) != str(doc_id)]
+        return True
+
+    @classmethod
     async def save_document_chunks(cls, chunks: List[Dict[str, Any]]) -> int:
         client = get_supabase_client()
         if client:

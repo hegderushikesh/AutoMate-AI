@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GitCompare, Sparkles, Check, Loader2, ArrowRight } from 'lucide-react';
+import { GitCompare, Sparkles, Check, Loader2 } from 'lucide-react';
 import { api } from '../../services/api';
 import { RadarMetricsChart } from './RadarMetricsChart';
 import { SpecTable } from './SpecTable';
@@ -63,15 +63,15 @@ export function ComparisonView({ onChatWithVehicle }) {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-8">
+    <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-6 bg-slate-50">
       {/* Vehicle Selection Strip */}
-      <div className="p-5 rounded-2xl bg-navy-900/80 border border-navy-800 space-y-3 shadow-lg">
+      <div className="p-5 rounded-lg bg-white border border-slate-200 space-y-3 shadow-xs">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-            <GitCompare className="w-4 h-4 text-accent-cyan" />
+          <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+            <GitCompare className="w-4 h-4 text-blue-600" />
             Select 2 to 4 Vehicles to Compare:
           </label>
-          <span className="text-xs font-mono text-accent-cyan">
+          <span className="text-xs font-mono font-medium text-blue-600">
             {selectedIds.length} / 4 Selected
           </span>
         </div>
@@ -83,21 +83,23 @@ export function ComparisonView({ onChatWithVehicle }) {
               <button
                 key={v.id}
                 onClick={() => toggleVehicle(v.id)}
-                className={`p-3 rounded-xl text-left border transition-all duration-200 flex items-center justify-between gap-2 ${
+                className={`p-3 rounded-lg text-left border transition-all duration-150 flex items-center justify-between gap-2 ${
                   isSelected
-                    ? 'bg-accent-cyan/15 border-accent-cyan/60 text-white shadow-[0_0_15px_rgba(56,189,248,0.2)]'
-                    : 'bg-navy-950/80 hover:bg-navy-850 border-navy-800 text-slate-400'
+                    ? 'bg-blue-50 border-blue-400 text-blue-900 shadow-xs'
+                    : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
                 }`}
               >
                 <div className="truncate">
-                  <span className="font-bold text-xs truncate block">{v.make} {v.model}</span>
-                  <span className="text-[10px] text-slate-400 font-mono">{v.category}</span>
+                  <span className="font-semibold text-xs truncate block text-slate-900">
+                    {v.make} {v.model}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-mono">{v.category}</span>
                 </div>
                 <div
-                  className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 border ${
+                  className={`w-4 h-4 rounded flex items-center justify-center shrink-0 border ${
                     isSelected
-                      ? 'bg-accent-cyan border-accent-cyan text-navy-950'
-                      : 'border-navy-700 bg-navy-900'
+                      ? 'bg-blue-600 border-blue-600 text-white'
+                      : 'border-slate-300 bg-slate-50'
                   }`}
                 >
                   {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
@@ -110,24 +112,24 @@ export function ComparisonView({ onChatWithVehicle }) {
 
       {loading ? (
         <div className="py-20 flex flex-col items-center justify-center space-y-3">
-          <Loader2 className="w-8 h-8 text-accent-cyan animate-spin" />
-          <p className="text-sm font-semibold text-slate-400">Computing comparison matrices...</p>
+          <Loader2 className="w-7 h-7 text-blue-600 animate-spin" />
+          <p className="text-xs font-medium text-slate-500">Computing comparison matrices...</p>
         </div>
       ) : comparisonResult ? (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Winner Highlights Banner */}
           {comparisonResult.winner_highlights &&
             comparisonResult.winner_highlights.length > 0 && (
-              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-navy-900 via-navy-900 to-sky-950/40 border border-accent-cyan/30 shadow-lg space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent-cyan">
-                  <Sparkles className="w-4 h-4 text-accent-cyan" />
+              <div className="p-4 sm:p-5 rounded-lg bg-blue-50/70 border border-blue-200 shadow-xs space-y-3">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-900">
+                  <Sparkles className="w-4 h-4 text-blue-600" />
                   Key Takeaways & Engineering Highlights
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                   {comparisonResult.winner_highlights.map((h, i) => (
                     <div
                       key={i}
-                      className="text-xs font-medium text-slate-200 bg-navy-950/60 p-2.5 rounded-xl border border-navy-800"
+                      className="text-xs font-medium text-slate-700 bg-white p-3 rounded-md border border-blue-100/80 shadow-2xs"
                     >
                       {h}
                     </div>
@@ -144,7 +146,7 @@ export function ComparisonView({ onChatWithVehicle }) {
 
           {/* Side-by-side Spec Table */}
           <div className="space-y-3">
-            <h4 className="text-sm font-bold text-white tracking-wide">
+            <h4 className="text-sm font-semibold text-slate-900 tracking-tight">
               Detailed Engineering Specification Table
             </h4>
             <SpecTable

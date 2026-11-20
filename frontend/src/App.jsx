@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { ToastProvider } from './context/ToastContext';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
+import { DashboardView } from './components/dashboard/DashboardView';
+import { DocumentManagementView } from './components/documents/DocumentManagementView';
 import { ChatView } from './components/chat/ChatView';
 import { CatalogView } from './components/catalog/CatalogView';
 import { ComparisonView } from './components/comparison/ComparisonView';
 import { VariantAnalyzerView } from './components/variants/VariantAnalyzerView';
-import { AdminView } from './components/admin/AdminView';
 import { DocumentUploadModal } from './components/admin/DocumentUploadModal';
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState('chat');
+  const [currentTab, setCurrentTab] = useState('dashboard');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [activeVehicleId, setActiveVehicleId] = useState(null);
   const [isGlobalUploadOpen, setIsGlobalUploadOpen] = useState(false);
@@ -29,7 +30,7 @@ export default function App() {
 
   return (
     <ToastProvider>
-      <div className="flex h-screen overflow-hidden bg-navy-950 font-sans selection:bg-accent-cyan/30 selection:text-accent-cyan">
+      <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
         {/* Main Sidebar Navigation */}
         <Sidebar
           currentTab={currentTab}
@@ -49,7 +50,18 @@ export default function App() {
           />
 
           {/* Dynamic Module Viewport */}
-          <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <main className="flex-1 flex flex-col min-h-0 overflow-hidden bg-slate-50">
+            {currentTab === 'dashboard' && (
+              <DashboardView
+                onNavigate={(tab) => setCurrentTab(tab)}
+                onChatWithVehicle={handleChatWithVehicle}
+              />
+            )}
+
+            {(currentTab === 'documents' || currentTab === 'admin') && (
+              <DocumentManagementView />
+            )}
+
             {currentTab === 'chat' && (
               <ChatView
                 key={chatResetKey}
@@ -67,8 +79,6 @@ export default function App() {
             )}
 
             {currentTab === 'variants' && <VariantAnalyzerView />}
-
-            {currentTab === 'admin' && <AdminView />}
           </main>
         </div>
 
@@ -78,7 +88,7 @@ export default function App() {
           onClose={() => setIsGlobalUploadOpen(false)}
           vehicles={[]}
           onUploadSuccess={() => {
-            // If in admin view or catalog, refreshed automatically
+            // Refreshes automatically in views
           }}
         />
       </div>

@@ -1,68 +1,72 @@
 import React from 'react';
-import { Menu, Plus, Sparkles, BookOpen } from 'lucide-react';
+import { Menu, Plus, Upload, BookOpen } from 'lucide-react';
 
 export function Header({ currentTab, onOpenMobile, onNewChat, onOpenUpload }) {
   const titles = {
+    dashboard: {
+      title: 'Automotive Operations Dashboard',
+      subtitle: 'Real-time overview of vehicle catalog, brochure ingestion, and AI indexing metrics.',
+    },
+    documents: {
+      title: 'Document & Brochure Management',
+      subtitle: 'Upload and manage OEM PDF brochures, PyMuPDF extraction, and vector index.',
+    },
     chat: {
       title: 'Automotive AI Assistant',
-      subtitle: 'Ask questions grounded in OEM PDF brochures and structured vehicle specifications.',
+      subtitle: 'Technical answers strictly grounded in OEM PDF brochures with verified citations.',
     },
     catalog: {
       title: 'Vehicle Catalog & Specifications',
-      subtitle: 'Explore full engineering profiles, powertrain options, and trim configurations.',
+      subtitle: 'Structured engineering profiles, powertrain options, and trim configurations.',
     },
     comparison: {
       title: 'Comparison Studio',
-      subtitle: 'Multi-vehicle technical evaluation, performance deltas, and radar metrics.',
+      subtitle: 'Side-by-side engineering evaluation, performance deltas, and radar metrics.',
     },
     variants: {
-      title: 'Variant & Trim Analyzer',
-      subtitle: 'Compare specific trim packages and evaluate upgrades.',
-    },
-    admin: {
-      title: 'Admin Document Management',
-      subtitle: 'Upload PDF brochures, inspect PyMuPDF text chunks, and monitor pgvector indexing.',
+      title: 'Variant & Package Analyzer',
+      subtitle: 'Detailed trim package differentials, dimensions, and feature upgrades.',
     },
   };
 
-  const current = titles[currentTab] || titles.chat;
+  const current = titles[currentTab] || titles.dashboard;
 
   return (
-    <header className="sticky top-0 z-30 h-20 bg-navy-950/80 backdrop-blur-md border-b border-navy-800/80 px-4 sm:px-8 flex items-center justify-between">
-      <div className="flex items-center gap-4">
+    <header className="sticky top-0 z-30 h-16 bg-white border-b border-slate-200 px-4 sm:px-8 flex items-center justify-between">
+      <div className="flex items-center gap-3">
         <button
           onClick={onOpenMobile}
-          className="p-2 rounded-xl bg-navy-900 border border-navy-700 text-slate-300 hover:text-white lg:hidden"
+          className="p-1.5 rounded-md bg-white border border-slate-300 text-slate-600 hover:text-slate-900 lg:hidden"
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="w-4 h-4" />
         </button>
 
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
+          <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
             {current.title}
           </h2>
-          <p className="text-xs text-slate-400 hidden sm:block truncate max-w-xl">
+          <p className="text-xs text-slate-500 hidden sm:block truncate max-w-xl">
             {current.subtitle}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-2 sm:gap-2.5">
         {currentTab === 'chat' && (
           <button
             onClick={onNewChat}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-navy-900 hover:bg-navy-800 text-slate-200 border border-navy-700/80 transition-colors shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 transition-colors shadow-xs"
           >
-            <Plus className="w-3.5 h-3.5 text-accent-cyan" />
+            <Plus className="w-3.5 h-3.5 text-slate-600" />
             <span>New Chat</span>
           </button>
         )}
 
         <button
           onClick={onOpenUpload}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-accent-cyan/10 hover:bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30 transition-colors shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-xs"
         >
-          <BookOpen className="w-3.5 h-3.5" />
+          <Upload className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Upload Brochure</span>
           <span className="sm:hidden">Upload</span>
         </button>

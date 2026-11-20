@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Send,
-  Sparkles,
   Bot,
   Car,
   History,
   RotateCcw,
   Loader2,
   ChevronDown,
-  Info
+  Info,
+  X
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { MessageBubble } from './MessageBubble';
@@ -37,8 +37,8 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
           api.getVehicles(),
           api.getChatSessions(),
         ]);
-        setVehicles(vRes.data);
-        setSessions(sRes.data);
+        setVehicles(vRes.data || []);
+        setSessions(sRes.data || []);
       } catch (err) {
         console.error('Failed to load initial chat data:', err);
       }
@@ -102,28 +102,26 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
       const res = await api.sendMessage(payload);
       const data = res.data;
 
-      if (!sessionId && data.session_id) {
+      // Update session ID if newly created
+      if (data.session_id && !sessionId) {
         setSessionId(data.session_id);
-        // Refresh sessions list
-        api.getChatSessions().then((r) => setSessions(r.data));
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: data.content,
-          citations: data.citations || [],
-          created_at: new Date().toISOString(),
-        },
-      ]);
+      // Add assistant response to UI
+      const botMsg = {
+        role: 'assistant',
+        content: data.response,
+        citations: data.citations || [],
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, botMsg]);
     } catch (err) {
-      toast.error(err.message || 'Failed to generate RAG response');
+      toast.error(`Inference Error: ${err.message}`);
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: `⚠️ Error: ${err.message}. Please verify local Ollama is active.`,
+          content: `⚠️ Error communicating with AI service: ${err.message}. Please ensure local Ollama is active on port 11434.`,
           citations: [],
           created_at: new Date().toISOString(),
         },
@@ -136,17 +134,17 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
   const startNewSession = () => {
     setSessionId(null);
     setMessages([]);
-    toast.info('Started a new conversation session');
+    toast.info('Started new conversation session');
   };
 
   const loadPastSession = async (sId) => {
     try {
       setLoading(true);
-      const res = await api.getSessionMessages(sId);
       setSessionId(sId);
-      setMessages(res.data.messages || []);
       setShowSessionsDrawer(false);
-      toast.success('Loaded past conversation');
+      const res = await api.getSessionMessages(sId);
+      setMessages(res.data || []);
+      toast.info('Loaded past conversation history');
     } catch (err) {
       toast.error('Could not load session messages');
     } finally {
@@ -157,12 +155,12 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
   const selectedVehicleObj = vehicles.find((v) => v.id === selectedVehicle);
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-5rem)] overflow-hidden bg-navy-950 relative">
+    <div className="flex-1 flex flex-col h-[calc(100vh-4rem)] overflow-hidden bg-slate-50 relative">
       {/* Top Filter & Context Bar */}
-      <div className="px-4 sm:px-8 py-3 bg-navy-950/60 border-b border-navy-850 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="px-4 sm:px-8 py-2.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-3">
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <Car className="w-3.5 h-3.5 text-accent-cyan" /> Focus Vehicle:
+          <label className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+            <Car className="w-3.5 h-3.5 text-slate-500" /> Focus Vehicle:
           </label>
           <div className="relative">
             <select
@@ -171,20 +169,20 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
                 setSelectedVehicle(e.target.value);
                 if (onSelectVehicle) onSelectVehicle(e.target.value);
               }}
-              className="appearance-none bg-navy-900 border border-navy-700/80 hover:border-accent-cyan/50 text-slate-200 text-xs font-semibold rounded-xl pl-3 pr-8 py-1.5 focus:outline-none focus:ring-1 focus:ring-accent-cyan transition-colors"
+              className="appearance-none bg-slate-50 border border-slate-300 hover:border-slate-400 text-slate-800 text-xs font-medium rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-blue-600 focus:bg-white transition-colors"
             >
               <option value="">All Vehicles & Catalog</option>
               {vehicles.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.make} {v.model} ({v.year}) - {v.category}
+                  {v.year} {v.make} {v.model} ({v.category})
                 </option>
               ))}
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
           {selectedVehicleObj && (
-            <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-mono text-accent-cyan px-2 py-0.5 rounded-md bg-accent-cyan/10 border border-accent-cyan/20">
+            <span className="hidden md:inline-flex items-center text-[11px] font-mono text-slate-700 px-2 py-0.5 rounded bg-slate-100 border border-slate-200">
               {selectedVehicleObj.price_range}
             </span>
           )}
@@ -193,12 +191,12 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowSessionsDrawer(!showSessionsDrawer)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white bg-navy-900 border border-navy-800 hover:border-navy-700 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-slate-700 hover:bg-slate-100 bg-white border border-slate-300 transition-colors shadow-xs"
           >
-            <History className="w-3.5 h-3.5 text-slate-400" />
+            <History className="w-3.5 h-3.5 text-slate-500" />
             <span className="hidden sm:inline">History</span>
             {sessions.length > 0 && (
-              <span className="ml-1 px-1.5 py-0.2 rounded-full bg-navy-800 text-[10px] font-mono text-accent-cyan">
+              <span className="ml-1 px-1.5 py-0.2 rounded-full bg-slate-100 text-[10px] font-mono text-slate-600">
                 {sessions.length}
               </span>
             )}
@@ -206,7 +204,7 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
 
           <button
             onClick={startNewSession}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-white bg-navy-900 border border-navy-800 hover:border-navy-700 transition-colors"
+            className="p-1.5 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-300 bg-white transition-colors shadow-xs"
             title="Clear and start new session"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -215,33 +213,29 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
       </div>
 
       {/* Main Messages Viewport */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-4">
         {messages.length === 0 ? (
           /* Empty State & Prompt Suggestions */
-          <div className="h-full flex flex-col justify-center items-center max-w-2xl mx-auto text-center space-y-8 my-auto py-8">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-accent-cyan/20 to-navy-800 border border-accent-cyan/30 flex items-center justify-center shadow-[0_0_25px_rgba(56,189,248,0.25)]">
-                <Bot className="w-8 h-8 text-accent-cyan" />
-              </div>
-              <Sparkles className="w-5 h-5 text-accent-emerald absolute -bottom-1 -right-1 animate-bounce" />
+          <div className="h-full flex flex-col justify-center items-center max-w-2xl mx-auto text-center space-y-6 my-auto py-8">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
+              <Bot className="w-6 h-6" />
             </div>
 
-            <div className="space-y-2">
-              <h3 className="text-2xl font-bold text-white tracking-tight">
-                Ask AutoMate AI Anything
+            <div className="space-y-1.5">
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                Automotive AI Engineering Assistant
               </h3>
-              <p className="text-sm text-slate-400 max-w-md mx-auto">
-                Grounded in OEM engineering brochures using pgvector similarity search and Qwen3.
-                Citations link directly to source brochure pages.
+              <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                Ask precise engineering, specification, charging, and pricing questions. Answers are strictly grounded in verified OEM brochures with page citations.
               </p>
             </div>
 
             {/* Suggested Question Chips */}
-            <div className="w-full space-y-2.5 text-left">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 px-1">
-                Suggested Automotive Queries:
+            <div className="w-full space-y-2 text-left">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block px-0.5">
+                Suggested Technical Inquiries:
               </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {suggestedPrompts.map((p, idx) => (
                   <button
                     key={idx}
@@ -249,42 +243,39 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
                       if (p.vehicle) setSelectedVehicle(p.vehicle);
                       handleSendMessage(p.text);
                     }}
-                    className="p-3 rounded-xl bg-navy-900/60 hover:bg-navy-900 border border-navy-800 hover:border-accent-cyan/40 text-left text-xs font-medium text-slate-300 hover:text-white transition-all shadow-sm group"
+                    className="p-3 rounded-lg text-left text-xs bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-700 transition-colors shadow-xs space-y-1"
                   >
-                    <div className="flex items-center gap-2 mb-1 text-[10px] font-semibold text-accent-cyan uppercase">
-                      <Sparkles className="w-3 h-3 group-hover:rotate-12 transition-transform" />
-                      Prompt
-                    </div>
-                    {p.text}
+                    <p className="font-medium text-slate-800 leading-snug">{p.text}</p>
+                    <span className="text-[10px] text-blue-600 font-semibold block">
+                      Click to ask →
+                    </span>
                   </button>
                 ))}
               </div>
             </div>
           </div>
         ) : (
-          /* Message Stream */
-          <div className="max-w-4xl mx-auto space-y-6">
+          <div className="max-w-4xl mx-auto space-y-4">
             {messages.map((msg, idx) => (
               <MessageBubble
                 key={idx}
                 message={msg}
-                onOpenCitation={(citation) => setActiveCitation(citation)}
+                onOpenCitation={(c) => setActiveCitation(c)}
               />
             ))}
 
-            {/* Thinking / Ingestion Indicator */}
             {loading && (
-              <div className="flex gap-4 p-5 rounded-2xl bg-navy-900/90 border border-navy-700/60 shadow-lg animate-pulse max-w-4xl">
-                <div className="w-8 h-8 rounded-xl bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/30 flex items-center justify-center shrink-0">
-                  <Bot className="w-4 h-4 animate-spin" />
+              <div className="flex gap-3 sm:gap-4 p-4 rounded-lg bg-white border border-slate-200 shadow-xs">
+                <div className="w-7 h-7 rounded bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shrink-0">
+                  <Bot className="w-4 h-4" />
                 </div>
                 <div className="space-y-2 flex-1">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-accent-cyan">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-blue-700">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Searching pgvector embeddings & generating grounded response...
+                    <span>Searching pgvector embeddings & synthesizing grounded response...</span>
                   </div>
-                  <div className="h-3 bg-navy-800 rounded w-3/4" />
-                  <div className="h-3 bg-navy-800 rounded w-1/2" />
+                  <div className="h-2.5 bg-slate-100 rounded w-3/4 animate-pulse" />
+                  <div className="h-2.5 bg-slate-100 rounded w-1/2 animate-pulse" />
                 </div>
               </div>
             )}
@@ -294,14 +285,14 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
       </div>
 
       {/* Input Form Bar */}
-      <div className="p-4 sm:p-6 bg-navy-950/90 border-t border-navy-850 shrink-0">
-        <div className="max-w-4xl mx-auto relative">
+      <div className="p-4 bg-white border-t border-slate-200 shrink-0">
+        <div className="max-w-4xl mx-auto">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSendMessage();
             }}
-            className="flex items-end gap-2 p-2 rounded-2xl bg-navy-900 border border-navy-700/80 focus-within:border-accent-cyan/60 focus-within:shadow-[0_0_20px_rgba(56,189,248,0.15)] transition-all"
+            className="flex items-end gap-2 p-2 rounded-lg bg-slate-50 border border-slate-300 focus-within:border-blue-600 focus-within:bg-white transition-colors"
           >
             <textarea
               value={inputQuery}
@@ -314,23 +305,24 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
               }}
               placeholder={
                 selectedVehicleObj
-                  ? `Ask about ${selectedVehicleObj.make} ${selectedVehicleObj.model} (Enter to send, Shift+Enter for new line)...`
-                  : 'Ask about any vehicle specifications, charging, comparison, or trim packages...'
+                  ? `Ask technical question about ${selectedVehicleObj.make} ${selectedVehicleObj.model} (Enter to send, Shift+Enter for newline)...`
+                  : 'Ask about vehicle specifications, charging architecture, performance, or trim deltas...'
               }
               rows={2}
-              className="flex-1 bg-transparent border-0 px-3 py-2 text-sm text-white placeholder-slate-400 focus:outline-none resize-none"
+              className="flex-1 bg-transparent border-0 px-2.5 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none resize-none"
             />
 
             <button
               type="submit"
               disabled={loading || !inputQuery.trim()}
-              className="p-3 rounded-xl bg-gradient-to-r from-accent-cyan to-sky-500 hover:from-sky-400 hover:to-accent-cyan text-navy-950 font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0"
+              className="px-3.5 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-xs shrink-0 flex items-center gap-1.5"
             >
-              <Send className="w-4 h-4" />
+              <span>Send</span>
+              <Send className="w-3.5 h-3.5" />
             </button>
           </form>
 
-          <p className="text-[11px] text-slate-400 text-center mt-2">
+          <p className="text-[11px] text-slate-400 text-center mt-1.5">
             AutoMate AI answers are strictly grounded in verified OEM brochures and structured specs.
           </p>
         </div>
@@ -338,20 +330,20 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
 
       {/* History Slide-Over Drawer */}
       {showSessionsDrawer && (
-        <div className="absolute top-0 right-0 bottom-0 w-80 bg-navy-900 border-l border-navy-800 shadow-2xl z-30 p-4 flex flex-col">
-          <div className="flex items-center justify-between pb-3 border-b border-navy-800">
-            <h4 className="text-sm font-bold text-white flex items-center gap-2">
-              <History className="w-4 h-4 text-accent-cyan" /> Past Conversations
+        <div className="absolute top-0 right-0 bottom-0 w-80 bg-white border-l border-slate-200 shadow-xl z-30 p-4 flex flex-col">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+            <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <History className="w-4 h-4 text-slate-600" /> Past Conversations
             </h4>
             <button
               onClick={() => setShowSessionsDrawer(false)}
-              className="text-xs text-slate-400 hover:text-white"
+              className="p-1 rounded text-slate-400 hover:text-slate-600"
             >
-              Close
+              <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto py-3 space-y-2">
+          <div className="flex-1 overflow-y-auto py-3 space-y-1.5">
             {sessions.length === 0 ? (
               <p className="text-xs text-slate-400 text-center py-6">No previous conversations</p>
             ) : (
@@ -359,14 +351,14 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
                 <button
                   key={s.id}
                   onClick={() => loadPastSession(s.id)}
-                  className={`w-full p-2.5 rounded-xl text-left text-xs font-medium transition-all ${
+                  className={`w-full p-2.5 rounded-md text-left text-xs transition-colors border ${
                     sessionId === s.id
-                      ? 'bg-accent-cyan/15 border border-accent-cyan/40 text-white'
-                      : 'bg-navy-950/60 hover:bg-navy-800 border border-navy-800 text-slate-300'
+                      ? 'bg-blue-50 border-blue-200 text-blue-900 font-semibold'
+                      : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
                   }`}
                 >
-                  <p className="truncate font-semibold">{s.title || 'Inquiry'}</p>
-                  <span className="text-[10px] text-slate-400 font-mono mt-1 block">
+                  <p className="truncate font-medium">{s.title || 'Automotive Inquiry'}</p>
+                  <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
                     {s.created_at ? new Date(s.created_at).toLocaleDateString() : 'Recent'}
                   </span>
                 </button>
