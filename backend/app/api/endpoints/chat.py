@@ -11,8 +11,11 @@ from app.models.schemas import (
 from app.core.database import DatabaseRepository
 from app.services.rag_engine import RAGEngine
 from app.services.llm_service import (
+    LLMAuthenticationError,
+    LLMRateLimitError,
     LLMTimeoutError,
     LLMConnectionError,
+    LLMModelUnavailableError,
     LLMServiceError,
 )
 
@@ -110,23 +113,44 @@ async def _handle_chat_query(payload: ChatMessageRequest) -> ChatMessageResponse
             citations=sources,
         )
 
+    except LLMAuthenticationError as e:
+        total_err_ms = (time.perf_counter() - t_start) * 1000
+        logger.error(f"[CHAT_DIAGNOSTICS] [FAILED] Groq Authentication Error after {total_err_ms:.2f}ms: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"error": "Authentication Error", "message": str(e)},
+        )
+    except LLMRateLimitError as e:
+        total_err_ms = (time.perf_counter() - t_start) * 1000
+        logger.error(f"[CHAT_DIAGNOSTICS] [FAILED] Groq Rate Limit after {total_err_ms:.2f}ms: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={"error": "Rate Limit Exceeded", "message": str(e)},
+        )
     except LLMTimeoutError as e:
         total_err_ms = (time.perf_counter() - t_start) * 1000
-        logger.error(f"[CHAT_DIAGNOSTICS] [FAILED] LLM Timeout after {total_err_ms:.2f}ms: {e}")
+        logger.error(f"[CHAT_DIAGNOSTICS] [FAILED] Groq Timeout after {total_err_ms:.2f}ms: {e}")
         raise HTTPException(
             status_code=status.HTTP_504_GATEWAY_TIMEOUT,
             detail={"error": "Gateway Timeout", "message": str(e)},
         )
+    except LLMModelUnavailableError as e:
+        total_err_ms = (time.perf_counter() - t_start) * 1000
+        logger.error(f"[CHAT_DIAGNOSTICS] [FAILED] Groq Model Unavailable after {total_err_ms:.2f}ms: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={"error": "Model Unavailable", "message": str(e)},
+        )
     except LLMConnectionError as e:
         total_err_ms = (time.perf_counter() - t_start) * 1000
-        logger.error(f"[CHAT_DIAGNOSTICS] [FAILED] LLM Connection Error after {total_err_ms:.2f}ms: {e}")
+        logger.error(f"[CHAT_DIAGNOSTICS] [FAILED] Groq Connection Error after {total_err_ms:.2f}ms: {e}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail={"error": "Bad Gateway", "message": str(e)},
         )
     except LLMServiceError as e:
         total_err_ms = (time.perf_counter() - t_start) * 1000
-        logger.error(f"[CHAT_DIAGNOSTICS] [FAILED] LLM Service Error after {total_err_ms:.2f}ms: {e}")
+        logger.error(f"[CHAT_DIAGNOSTICS] [FAILED] Groq Service Error after {total_err_ms:.2f}ms: {e}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail={"error": "Bad Gateway", "message": str(e)},

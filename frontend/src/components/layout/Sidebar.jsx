@@ -72,7 +72,11 @@ export function Sidebar({ currentTab, setCurrentTab, isMobileOpen, setIsMobileOp
     },
   ];
 
-  const ollamaOnline = health?.ollama?.status === 'connected';
+  const aiOnline =
+    health?.groq?.status === 'connected' ||
+    health?.llm?.status === 'connected' ||
+    health?.ollama?.status === 'connected';
+  const aiModel = health?.groq?.model || health?.llm?.model || 'llama-3.3-70b';
 
   return (
     <>
@@ -170,28 +174,28 @@ export function Sidebar({ currentTab, setCurrentTab, isMobileOpen, setIsMobileOp
           <div className="p-2.5 rounded-md bg-white border border-slate-200 text-xs space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1">
-                <Cpu className="w-3 h-3 text-slate-600" /> Ollama Local AI
+                <Cpu className="w-3 h-3 text-slate-600" /> Groq Cloud AI
               </span>
               <span
                 className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.2 rounded ${
-                  ollamaOnline
+                  aiOnline
                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : 'bg-red-50 text-red-700 border border-red-200'
+                    : 'bg-amber-50 text-amber-700 border border-amber-200'
                 }`}
               >
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${
-                    ollamaOnline ? 'bg-emerald-500' : 'bg-red-500'
+                    aiOnline ? 'bg-emerald-500' : 'bg-amber-500'
                   }`}
                 />
-                {ollamaOnline ? 'Online' : 'Offline'}
+                {aiOnline ? 'Active' : 'Setup Key'}
               </span>
             </div>
 
             <div className="flex justify-between text-[11px] text-slate-500">
               <span>Model:</span>
               <span className="font-mono text-slate-700 font-medium truncate max-w-[120px]">
-                {health?.ollama?.target_model || 'qwen3:1.7b'}
+                {aiModel}
               </span>
             </div>
             <div className="flex justify-between text-[11px] text-slate-500">

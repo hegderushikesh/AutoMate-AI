@@ -1,67 +1,84 @@
+import os
 import logging
-import re
 from typing import Optional, Tuple
-import httpx
 
+from groq import (
+    AsyncGroq,
+    AuthenticationError,
+    RateLimitError,
+    APITimeoutError,
+    APIConnectionError,
+    BadRequestError,
+    NotFoundError,
+)
 from app.core.config import get_settings
 
 logger = logging.getLogger("automate.llm")
 settings = get_settings()
 
 
+class LLMAuthenticationError(Exception):
+    """Raised when the Groq API key is missing or invalid."""
+    pass
+
+
+class LLMRateLimitError(Exception):
+    """Raised when the Groq API rate limit is exceeded."""
+    pass
+
+
 class LLMTimeoutError(Exception):
-    """Raised when the LLM service exceeds the timeout threshold."""
+    """Raised when the Groq API request exceeds the timeout threshold."""
     pass
 
 
 class LLMConnectionError(Exception):
-    """Raised when unable to connect to the LLM service."""
+    """Raised when unable to connect to the Groq API service."""
+    pass
+
+
+class LLMModelUnavailableError(Exception):
+    """Raised when the configured Groq model is deprecated or not available."""
     pass
 
 
 class LLMServiceError(Exception):
-    """Raised when the LLM service returns an invalid or error response."""
+    """Generic error when the Groq LLM returns an unhandled error response."""
     pass
 
 
 class LLMService:
     """
-    Communicates with Ollama through the OpenAI-compatible v1 endpoint.
-    Handles timeout, connection failures, Qwen3 <think> tags, and guarantees non-empty responses.
+    Cloud-native LLM Generation Service powered by Groq Cloud API.
+    Uses official Groq Python SDK with high-throughput LPU inference.
+    Preserves strict automotive grounding rules, citations, and error recovery.
     """
 
-    SYSTEM_PROMPT = (
-        "You are AutoMate AI, an authoritative, precision-focused Automotive AI Assistant.\n"
-        "Your mission is to provide accurate, factual, and deeply technical answers regarding vehicle specifications, "
-        "features, performance, charging, and engineering grounded strictly in OEM brochures.\n"
-        "STRICT RULES:\n"
-        "1. Never invent or hallucinate specifications.\n"
-        "2. Keep answers concise, factual, and formatted with clean markdown.\n"
-        "3. Include citations like [Doc: <Filename>, Page: <PageNumber>] whenever referencing brochure text.\n"
-        "4. Answer directly. DO NOT output chain-of-thought or <think> tags in your final answer."
-    )
+    SYSTEM_PROMPT = """You are AutoMate AI, an authoritative, precision-focused Automotive AI Assistant.
+Your mission is to provide accurate, factual, and deeply technical answers regarding vehicle specifications, features, performance, charging, and engineering.
+
+STRICT GROUNDING RULES:
+1. You must answer ONLY using the verified context provided below (Structured Vehicle Specifications and Retrieved OEM Brochure Passages).
+2. For EVERY technical claim, specification, or fact you mention, you MUST append a citation referencing the source document and page number in this format: [Doc: <Filename>, Page: <PageNumber>].
+3. If the answer cannot be determined with complete confidence from the provided context, state clearly and concisely: "Not found in the brochure."
+4. NEVER invent, extrapolate, or hallucinate vehicle specifications, trim levels, battery sizes, acceleration times, or features.
+5. Present numerical specifications with proper units (hp, Nm, kWh, kW, mm, MPGe, seconds) and format currency in Indian Rupees (₹ / INR, Lakhs and Crores).
+6. Format your responses with clean markdown, bullet points, or comparison tables when appropriate."""
 
     FALLBACK_ANSWER = (
-        "I analyzed the vehicle brochure context, but was unable to generate a conclusive technical summary. "
+        "I analyzed the vehicle brochure context, but was unable to produce a definitive summary. "
         "Please rephrase or specify the exact vehicle trim or parameter you are inquiring about."
     )
 
-    @staticmethod
-    def clean_qwen_output(text: Optional[str]) -> str:
-        """
-        Cleans Qwen3 reasoning output:
-        - Removes closed <think>...</think> tags.
-        - Removes unclosed <think> tags.
-        - Strips whitespace.
-        """
-        if not text:
-            return ""
-        # Remove complete <think>...</think> blocks
-        cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
-        # Handle unclosed <think> tag
-        if "<think>" in cleaned:
-            cleaned = re.sub(r"<think>.*", "", cleaned, flags=re.DOTALL).strip()
-        return cleaned
+    @classmethod
+    def get_client(cls) -> AsyncGroq:
+        """Instantiates or retrieves the AsyncGroq client using GROQ_API_KEY."""
+        api_key = settings.GROQ_API_KEY or os.environ.get("GROQ_API_KEY", "").strip()
+        if not api_key:
+            raise LLMAuthenticationError(
+                "GROQ_API_KEY is not configured. Please set GROQ_API_KEY in your environment variables to enable AI generation."
+            )
+        return AsyncGroq(api_key=api_key, timeout=settings.GROQ_TIMEOUT)
 
     @classmethod
     async def generate_chat_completion(
@@ -72,97 +89,98 @@ class LLMService:
         max_retries: int = 1,
     ) -> Tuple[str, str]:
         """
-        Calls Ollama at LLM_BASE_URL/chat/completions with stream=False, temperature=0.1,
-        and a 120s timeout.
+        Executes cloud inference via Groq Cloud API.
         Returns:
             Tuple[cleaned_answer, raw_response_preview]
         Raises:
-            LLMTimeoutError, LLMConnectionError, LLMServiceError
+            LLMAuthenticationError, LLMRateLimitError, LLMTimeoutError,
+            LLMConnectionError, LLMModelUnavailableError, LLMServiceError
         """
-        endpoint = f"{settings.LLM_BASE_URL}/chat/completions"
         sys_prompt = system_prompt or cls.SYSTEM_PROMPT
+        model_name = settings.GROQ_MODEL or "llama-3.3-70b-versatile"
 
-        # Add /no_think to user message to instruct Qwen3 to suppress think tokens
-        user_content = f"{context_prompt}\n\nUSER QUESTION: {user_query}\n/no_think"
+        client = cls.get_client()
 
-        payload = {
-            "model": settings.OLLAMA_MODEL,
-            "messages": [
-                {"role": "system", "content": sys_prompt},
-                {"role": "user", "content": user_content},
-            ],
-            "temperature": 0.1,
-            "stream": False,
-        }
+        messages = [
+            {"role": "system", "content": sys_prompt},
+            {
+                "role": "user",
+                "content": f"{context_prompt}\n\nUSER QUESTION:\n{user_query}\n\nProvide a factual, grounded answer with citations [Doc: <Filename>, Page: <PageNumber>]:",
+            },
+        ]
 
-        raw_response_text = ""
         attempt = 0
+        raw_response_text = ""
 
         while attempt <= max_retries:
             attempt += 1
             try:
-                timeout = httpx.Timeout(120.0, connect=10.0)
-                async with httpx.AsyncClient(timeout=timeout) as client:
-                    resp = await client.post(endpoint, json=payload)
+                logger.info(
+                    f"[LLMService] Dispatching inference to Groq Cloud | model={model_name} | attempt={attempt}"
+                )
+                chat_completion = await client.chat.completions.create(
+                    model=model_name,
+                    messages=messages,
+                    temperature=0.1,
+                    max_tokens=1024,
+                )
 
-                    if resp.status_code != 200:
-                        raise LLMServiceError(
-                            f"Ollama returned HTTP {resp.status_code}: {resp.text[:300]}"
-                        )
-
-                    data = resp.json()
-                    choices = data.get("choices", [])
-                    if not choices:
-                        if attempt <= max_retries:
-                            logger.warning(f"[LLMService] Empty choices on attempt {attempt}. Retrying...")
-                            continue
-                        raise LLMServiceError("Ollama response contained no choices.")
-
-                    choice_msg = choices[0].get("message", {})
-                    content = choice_msg.get("content")
-                    reasoning = choice_msg.get("reasoning")
-
-                    # In Ollama's OpenAI API, content or reasoning holds text
-                    raw_text = content if (content is not None and str(content).strip()) else (reasoning or "")
-                    raw_response_text = str(raw_text)
-
-                    cleaned = cls.clean_qwen_output(raw_response_text)
-
-                    # If content was empty or only think tags, but reasoning had content
-                    if not cleaned and reasoning:
-                        cleaned = cls.clean_qwen_output(str(reasoning))
-
-                    if cleaned and cleaned.strip():
-                        return cleaned.strip(), raw_response_text[:500]
-
-                    # Cleaned answer was empty; retry once with a concise direct instruction
+                choices = chat_completion.choices
+                if not choices:
                     if attempt <= max_retries:
-                        logger.warning(
-                            f"[LLMService] Attempt {attempt} returned empty cleaned text. Retrying once..."
-                        )
-                        payload["messages"] = [
-                            {"role": "system", "content": "Answer the question directly in 2-3 sentences based strictly on the context. Do not think."},
-                            {"role": "user", "content": f"{context_prompt[:1200]}\n\nQuestion: {user_query}\n/no_think"},
-                        ]
+                        logger.warning(f"[LLMService] Empty choices received from Groq on attempt {attempt}. Retrying...")
                         continue
+                    raise LLMServiceError("Groq API returned an empty choices list.")
 
-            except httpx.TimeoutException as e:
-                logger.error(f"[LLMService] Request timed out after 120s to {endpoint}: {e}")
+                raw_text = choices[0].message.content or ""
+                raw_response_text = str(raw_text).strip()
+
+                if raw_response_text:
+                    return raw_response_text, raw_response_text[:500]
+
+                # If text is empty on first attempt, retry once
+                if attempt <= max_retries:
+                    logger.warning(f"[LLMService] Groq returned blank response on attempt {attempt}. Retrying...")
+                    continue
+
+            except AuthenticationError as e:
+                logger.error(f"[LLMService] Groq authentication failure: {e}")
+                raise LLMAuthenticationError(
+                    f"Groq API authentication failed: Invalid or missing API key. Please check your GROQ_API_KEY environment variable."
+                ) from e
+            except RateLimitError as e:
+                logger.error(f"[LLMService] Groq rate limit exceeded: {e}")
+                raise LLMRateLimitError(
+                    f"Groq Cloud rate limit exceeded. Please wait a few moments before submitting another request."
+                ) from e
+            except APITimeoutError as e:
+                logger.error(f"[LLMService] Groq request timed out: {e}")
                 raise LLMTimeoutError(
-                    f"LLM request timed out after 120 seconds. Please check local Ollama capacity."
+                    f"Groq Cloud inference request timed out after {settings.GROQ_TIMEOUT}s."
                 ) from e
-            except httpx.ConnectError as e:
-                logger.error(f"[LLMService] Connection failed to {endpoint}: {e}")
+            except APIConnectionError as e:
+                logger.error(f"[LLMService] Groq connection error: {e}")
                 raise LLMConnectionError(
-                    f"Cannot connect to Ollama at {settings.LLM_BASE_URL}. Ensure Ollama is running."
+                    f"Failed to connect to Groq Cloud API service. Please verify network connectivity."
                 ) from e
-            except (LLMTimeoutError, LLMConnectionError):
+            except (NotFoundError, BadRequestError) as e:
+                logger.error(f"[LLMService] Groq model error: {e}")
+                raise LLMModelUnavailableError(
+                    f"Configured Groq model '{model_name}' is unavailable or invalid: {str(e)}"
+                ) from e
+            except (
+                LLMAuthenticationError,
+                LLMRateLimitError,
+                LLMTimeoutError,
+                LLMConnectionError,
+                LLMModelUnavailableError,
+            ):
                 raise
             except Exception as e:
-                logger.error(f"[LLMService] Unexpected error communicating with {endpoint}: {e}")
+                logger.error(f"[LLMService] Unexpected Groq API error: {e}", exc_info=True)
                 if attempt > max_retries:
-                    raise LLMServiceError(f"LLM communication error: {str(e)}") from e
+                    raise LLMServiceError(f"Groq API communication error: {str(e)}") from e
 
-        # If after retries cleaned text is still empty, return safe non-empty fallback message
-        logger.warning("[LLMService] Cleaned response remained empty after retries. Using fallback answer.")
+        # Safe fallback if empty text after retry
+        logger.warning("[LLMService] Returning fallback answer after empty Groq response.")
         return cls.FALLBACK_ANSWER, raw_response_text[:500]

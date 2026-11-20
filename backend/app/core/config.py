@@ -8,19 +8,28 @@ class Settings(BaseSettings):
     APP_NAME: str = "AutoMate AI"
     APP_ENV: str = "development"
     DEBUG: bool = True
-    HOST: str = "0.0.0.0"
-    PORT: int = 8000
+    HOST: str = os.environ.get("HOST", "0.0.0.0")
+    PORT: int = int(os.environ.get("PORT", 8000))
     CORS_ORIGINS: str = (
         "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000,"
         "https://auto-mate-ai-blond.vercel.app"
     )
 
-    # Ollama Local Configuration
+    # Groq Cloud AI Configuration
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    GROQ_TIMEOUT: float = 60.0
+
+    # Cloud-Compatible Embedding Configuration (Standalone ONNX 384d)
+    EMBEDDING_PROVIDER: str = "fastembed"
+    EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
+    EMBEDDING_DIMENSION: int = 384
+
+    # Legacy/Fallback Ollama Configuration (optional local fallback)
     OLLAMA_BASE_URL: str = "http://127.0.0.1:11434"
     LLM_BASE_URL: str = "http://127.0.0.1:11434/v1"
     OLLAMA_MODEL: str = "qwen3:1.7b"
     OLLAMA_EMBED_MODEL: str = "all-minilm"
-    EMBEDDING_DIMENSION: int = 384
 
     # Supabase Configuration
     SUPABASE_URL: str = ""

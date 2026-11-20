@@ -60,7 +60,7 @@ class RAGEngine:
         2. Retrieves relevant brochure chunks via pgvector.
         3. Retrieves structured vehicle and variant specifications.
         4. Builds grounded context prompt (max ~1500 tokens).
-        5. Calls local Ollama OpenAI-compatible endpoint.
+        5. Calls Groq Cloud API LPU inference (llama-3.3-70b-versatile).
         6. Extracts verified citations.
         Returns:
             Tuple[answer_text, sources_list, diagnostics_dict]

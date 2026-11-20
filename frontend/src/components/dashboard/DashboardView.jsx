@@ -62,7 +62,11 @@ export function DashboardView({ onNavigate, onChatWithVehicle }) {
     (d) => d.status === 'indexed' || d.status === 'completed'
   ).length;
 
-  const ollamaOnline = health?.ollama?.status === 'connected';
+  const aiOnline =
+    health?.groq?.status === 'connected' ||
+    health?.llm?.status === 'connected' ||
+    health?.ollama?.status === 'connected';
+  const aiModel = health?.groq?.model || health?.llm?.model || 'llama-3.3-70b-versatile';
 
   // Associate vehicle names for documents
   const getVehicleName = (vehicleId) => {
@@ -192,13 +196,13 @@ export function DashboardView({ onNavigate, onChatWithVehicle }) {
             <Cpu className="w-4 h-4 text-slate-600" />
           </div>
           <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${ollamaOnline ? 'bg-emerald-500' : 'bg-red-500'}`} />
+            <span className={`w-2 h-2 rounded-full ${aiOnline ? 'bg-emerald-500' : 'bg-amber-500'}`} />
             <span className="text-base font-bold text-slate-900 font-mono">
-              {ollamaOnline ? 'Online (11434)' : 'Offline'}
+              {aiOnline ? 'Groq LPU (Cloud)' : 'Setup Key'}
             </span>
           </div>
           <div className="text-[11px] text-slate-500 mt-1.5 truncate">
-            Ollama <span className="font-mono text-slate-700">qwen3:1.7b</span> • 384d
+            Groq <span className="font-mono text-slate-700">{aiModel}</span> • 384d
           </div>
         </div>
       </div>
