@@ -468,6 +468,9 @@ class DatabaseRepository:
         Performs vector similarity search via pgvector match_document_chunks RPC in Supabase,
         or cosine similarity via numpy across local chunks.
         """
+        if filter_vehicle_id and str(filter_vehicle_id).strip() in ("", "null", "undefined"):
+            filter_vehicle_id = None
+
         client = get_supabase_client()
         if client:
             try:
@@ -594,3 +597,62 @@ class DatabaseRepository:
                 _handle_supabase_error("get_messages", e)
 
         return [m for m in _LOCAL_MESSAGES if str(m.get("session_id")) == str(session_id)]
+
+    @classmethod
+    async def seed_default_brochures_if_empty(cls):
+        """
+        Seeds sample OEM brochures into the repository if no documents are currently loaded,
+        ensuring immediate out-of-the-box RAG question answering.
+        """
+        if _LOCAL_DOCUMENTS:
+            return
+
+        import os
+        from app.services.pdf_processor import PDFProcessor
+        from app.services.embedding_service import EmbeddingService
+
+        sample_dir = "sample_brochures"
+        if not os.path.exists(sample_dir):
+            return
+
+        vehicles = await cls.get_vehicles()
+        brochure_configs = [
+            ("2025_Porsche_Taycan_Brochure.pdf", "Taycan", "doc-seed-taycan-1"),
+            ("2025_BMW_3_Series_Brochure.pdf", "3 Series", "doc-seed-bmw-1"),
+        ]
+
+        for filename, vehicle_kw, doc_id in brochure_configs:
+            pdf_path = os.path.join(sample_dir, filename)
+            if not os.path.exists(pdf_path):
+                continue
+
+            vehicle = next((v for v in vehicles if vehicle_kw.lower() in v.get("model", "").lower()), None)
+            v_id = vehicle["id"] if vehicle else None
+
+            try:
+                pages = PDFProcessor.extract_text_by_pages(pdf_path)
+                chunks = PDFProcessor.chunk_document(
+                    pages_data=pages,
+                    document_id=doc_id,
+                    vehicle_id=v_id,
+                    filename=filename,
+                )
+
+                # Batch embed chunks with all-minilm
+                texts = [c["content"] for c in chunks]
+                embeddings = await EmbeddingService.generate_batch_embeddings(texts)
+                for i, emb in enumerate(embeddings):
+                    chunks[i]["embedding"] = emb
+
+                await cls.save_document({
+                    "id": doc_id,
+                    "vehicle_id": v_id,
+                    "filename": filename,
+                    "file_size_bytes": os.path.getsize(pdf_path),
+                    "total_pages": len(pages),
+                    "status": "Completed",
+                })
+                await cls.save_document_chunks(chunks)
+                print(f"[DatabaseRepository] Auto-seeded brochure {filename} ({len(chunks)} chunks).")
+            except Exception as e:
+                print(f"[DatabaseRepository] Auto-seed notice for {filename}: {e}")

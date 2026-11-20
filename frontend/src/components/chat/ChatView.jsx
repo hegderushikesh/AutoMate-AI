@@ -107,11 +107,17 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
         setSessionId(data.session_id);
       }
 
-      // Add assistant response to UI
+      // Add assistant response to UI - strictly non-empty
+      const rawAnswer = data.answer || data.content || data.response;
+      const answerText = rawAnswer && rawAnswer.trim() ? rawAnswer.trim() : 'Not found in the brochure.';
+      const sourcesList = data.sources || data.citations || [];
+
       const botMsg = {
         role: 'assistant',
-        content: data.response,
-        citations: data.citations || [],
+        content: answerText,
+        answer: answerText,
+        citations: sourcesList,
+        sources: sourcesList,
         created_at: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, botMsg]);
@@ -121,8 +127,12 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
         ...prev,
         {
           role: 'assistant',
-          content: `⚠️ Error communicating with AI service: ${err.message}. Please ensure local Ollama is active on port 11434.`,
+          content: `⚠️ Error communicating with AI service: ${err.message}.`,
+          answer: `⚠️ Error communicating with AI service: ${err.message}.`,
+          isError: true,
+          failedQuery: query,
           citations: [],
+          sources: [],
           created_at: new Date().toISOString(),
         },
       ]);
@@ -261,6 +271,7 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
                 key={idx}
                 message={msg}
                 onOpenCitation={(c) => setActiveCitation(c)}
+                onRetry={(failedQ) => handleSendMessage(failedQ)}
               />
             ))}
 
@@ -269,13 +280,13 @@ export function ChatView({ activeVehicleId, onSelectVehicle }) {
                 <div className="w-7 h-7 rounded bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shrink-0">
                   <Bot className="w-4 h-4" />
                 </div>
-                <div className="space-y-2 flex-1">
+                <div className="space-y-1.5 flex-1">
                   <div className="flex items-center gap-2 text-xs font-semibold text-blue-700">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Searching pgvector embeddings & synthesizing grounded response...</span>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                    <span>Thinking... analyzing OEM brochure data</span>
                   </div>
-                  <div className="h-2.5 bg-slate-100 rounded w-3/4 animate-pulse" />
-                  <div className="h-2.5 bg-slate-100 rounded w-1/2 animate-pulse" />
+                  <div className="h-2 bg-slate-100 rounded w-3/4 animate-pulse" />
+                  <div className="h-2 bg-slate-100 rounded w-1/2 animate-pulse" />
                 </div>
               </div>
             )}

@@ -83,16 +83,32 @@ class CitationItem(BaseModel):
 
 
 class ChatMessageRequest(BaseModel):
-    message: str = Field(..., min_length=1, example="What is the 0-60 time and battery capacity of the Taycan Turbo S?")
+    message: Optional[str] = Field(None, example="What is the 0-60 time and battery capacity of the Taycan Turbo S?")
+    query: Optional[str] = Field(None, example="What is the 0-60 time?")
     session_id: Optional[str] = None
     vehicle_id: Optional[str] = None
 
+    @property
+    def question(self) -> str:
+        q = (self.message or self.query or "").strip()
+        if not q:
+            raise ValueError("A non-empty 'message' or 'query' is required.")
+        return q
+
 
 class ChatMessageResponse(BaseModel):
+    answer: str
+    sources: List[CitationItem] = Field(default_factory=list)
     session_id: str
-    role: str
-    content: str
+    content: Optional[str] = None
+    role: str = "assistant"
     citations: List[CitationItem] = Field(default_factory=list)
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.content is None:
+            self.content = self.answer
+        if not self.citations and self.sources:
+            self.citations = self.sources
 
 
 class ChatSessionResponse(BaseModel):

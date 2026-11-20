@@ -14,8 +14,9 @@ const apiClient = axios.create({
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    const detail = error.response?.data?.detail;
     const errorMsg =
-      error.response?.data?.detail ||
+      (typeof detail === 'string' ? detail : detail?.message || detail?.error) ||
       error.response?.data?.message ||
       error.message ||
       'An unexpected network error occurred';
@@ -44,7 +45,7 @@ export const api = {
   deleteDocument: (docId) => apiClient.delete(`/documents/${docId}`),
 
   // RAG Chat
-  sendMessage: (payload) => apiClient.post('/chat/message', payload),
+  sendMessage: (payload) => apiClient.post('/chat', payload),
   getChatSessions: () => apiClient.get('/chat/sessions'),
   createSession: (title, vehicleId) =>
     apiClient.post('/chat/sessions', null, { params: { title, vehicle_id: vehicleId } }),

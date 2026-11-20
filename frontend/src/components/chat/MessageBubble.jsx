@@ -1,21 +1,35 @@
 import React from 'react';
-import { Bot, User, BookOpen, ExternalLink } from 'lucide-react';
+import { Bot, User, BookOpen, ExternalLink, RotateCcw } from 'lucide-react';
 
-export function MessageBubble({ message, onOpenCitation }) {
+export function MessageBubble({ message, onOpenCitation, onRetry }) {
   const isAssistant = message.role === 'assistant';
+  const textContent =
+    message.answer ||
+    message.content ||
+    message.response ||
+    (isAssistant ? 'Not found in the brochure.' : '');
+  const sources = message.sources || message.citations || [];
 
   return (
     <div
       className={`flex gap-3 sm:gap-4 p-4 sm:p-5 rounded-lg transition-colors ${
         isAssistant
-          ? 'bg-white border border-slate-200 shadow-xs'
+          ? message.isError
+            ? 'bg-red-50/60 border border-red-200 shadow-xs'
+            : 'bg-white border border-slate-200 shadow-xs'
           : 'bg-slate-900 text-white shadow-xs ml-8 sm:ml-16'
       }`}
     >
       {/* Avatar */}
       <div className="shrink-0">
         {isAssistant ? (
-          <div className="flex items-center justify-center w-7 h-7 rounded bg-blue-50 text-blue-600 border border-blue-200">
+          <div
+            className={`flex items-center justify-center w-7 h-7 rounded border ${
+              message.isError
+                ? 'bg-red-100 text-red-700 border-red-300'
+                : 'bg-blue-50 text-blue-600 border-blue-200'
+            }`}
+          >
             <Bot className="w-4 h-4" />
           </div>
         ) : (
@@ -30,17 +44,17 @@ export function MessageBubble({ message, onOpenCitation }) {
         <div className="flex items-center justify-between">
           <span
             className={`text-xs font-semibold ${
-              isAssistant ? 'text-slate-900' : 'text-slate-200'
+              isAssistant
+                ? message.isError
+                  ? 'text-red-700'
+                  : 'text-slate-900'
+                : 'text-slate-200'
             }`}
           >
             {isAssistant ? 'AutoMate AI' : 'You'}
           </span>
           {message.created_at && (
-            <span
-              className={`text-[10px] ${
-                isAssistant ? 'text-slate-400' : 'text-slate-400'
-              }`}
-            >
+            <span className="text-[10px] text-slate-400">
               {new Date(message.created_at).toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -52,24 +66,41 @@ export function MessageBubble({ message, onOpenCitation }) {
         {/* Text Body */}
         <div
           className={`text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans ${
-            isAssistant ? 'text-slate-800' : 'text-slate-100'
+            isAssistant
+              ? message.isError
+                ? 'text-red-800'
+                : 'text-slate-800'
+              : 'text-slate-100'
           }`}
         >
-          {message.content}
+          {textContent}
         </div>
 
+        {/* Retry Button on Failure */}
+        {message.isError && onRetry && (
+          <div className="pt-1">
+            <button
+              onClick={() => onRetry(message.failedQuery)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-red-600 hover:bg-red-700 text-white transition-colors shadow-2xs"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Retry Question</span>
+            </button>
+          </div>
+        )}
+
         {/* Grounded Citation Badges */}
-        {message.citations && message.citations.length > 0 && (
+        {sources && sources.length > 0 && (
           <div className="pt-2 border-t border-slate-100">
             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 mb-1.5">
               <BookOpen className="w-3.5 h-3.5 text-blue-600" />
               <span>Grounded Source Citations:</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {message.citations.map((c, i) => (
+              {sources.map((c, i) => (
                 <button
                   key={i}
-                  onClick={() => onOpenCitation(c)}
+                  onClick={() => onOpenCitation && onOpenCitation(c)}
                   className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-blue-700 border border-slate-200 transition-colors shadow-xs"
                   title="Click to view verified brochure passage"
                 >
